@@ -1,17 +1,13 @@
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { JhiTrackerService } from './../shared/tracker/tracker.service';
-
-import { GtwSharedModule } from '../shared';
+import { GtwSharedModule } from 'app/shared';
 /* jhipster-needle-add-admin-module-import - JHipster will add admin modules imports here */
 
 import {
     adminState,
     UserMgmtComponent,
-    UserDialogComponent,
-    UserDeleteDialogComponent,
     UserMgmtDetailComponent,
-    UserMgmtDialogComponent,
+    UserMgmtUpdateComponent,
     UserMgmtDeleteDialogComponent,
     LogsComponent,
     JhiMetricsMonitoringModalComponent,
@@ -20,30 +16,20 @@ import {
     JhiHealthCheckComponent,
     JhiConfigurationComponent,
     JhiDocsComponent,
-    JhiConfigurationService,
-    JhiHealthService,
-    JhiMetricsService,
-    GatewayRoutesService,
     JhiGatewayComponent,
-    JhiTrackerComponent,
-    LogsService,
-    UserResolvePagingParams,
-    UserResolve,
-    UserModalService
+    JhiTrackerComponent
 } from './';
 
 @NgModule({
     imports: [
         GtwSharedModule,
-        RouterModule.forChild(adminState),
+        RouterModule.forChild(adminState)
         /* jhipster-needle-add-admin-module - JHipster will add admin modules here */
     ],
     declarations: [
         UserMgmtComponent,
-        UserDialogComponent,
-        UserDeleteDialogComponent,
         UserMgmtDetailComponent,
-        UserMgmtDialogComponent,
+        UserMgmtUpdateComponent,
         UserMgmtDeleteDialogComponent,
         LogsComponent,
         JhiConfigurationComponent,
@@ -55,23 +41,7 @@ import {
         JhiMetricsMonitoringComponent,
         JhiMetricsMonitoringModalComponent
     ],
-    entryComponents: [
-        UserMgmtDialogComponent,
-        UserMgmtDeleteDialogComponent,
-        JhiHealthModalComponent,
-        JhiMetricsMonitoringModalComponent,
-    ],
-    providers: [
-        JhiConfigurationService,
-        JhiHealthService,
-        JhiMetricsService,
-        GatewayRoutesService,
-        LogsService,
-        JhiTrackerService,
-        UserResolvePagingParams,
-        UserResolve,
-        UserModalService
-    ],
+    entryComponents: [UserMgmtDeleteDialogComponent, JhiHealthModalComponent, JhiMetricsMonitoringModalComponent],
     schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class GtwAdminModule {}

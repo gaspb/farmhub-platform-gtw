@@ -1,39 +1,23 @@
-import { NgModule, LOCALE_ID } from '@angular/core';
+import { LOCALE_ID, NgModule } from '@angular/core';
+import { JhiAlertErrorComponent } from './alert/alert-error.component';
+import { JhiAlertComponent } from './alert/alert.component';
+import { GtwSharedLibsModule } from './shared-libs.module';
 import { Title } from '@angular/platform-browser';
-import { registerLocaleData } from '@angular/common';
-import locale from '@angular/common/locales/en';
-
-import { WindowRef } from './tracker/window.service';
-import {
-    GtwSharedLibsModule,
-    JhiAlertComponent,
-    JhiAlertErrorComponent
-} from './';
+import { WindowRef } from '../core/tracker/window.service';
 
 @NgModule({
-    imports: [
-        GtwSharedLibsModule
-    ],
-    declarations: [
-        JhiAlertComponent,
-        JhiAlertErrorComponent
-    ],
+    imports: [GtwSharedLibsModule],
+    declarations: [JhiAlertComponent, JhiAlertErrorComponent],
     providers: [
         WindowRef,
         Title,
         {
             provide: LOCALE_ID,
             useValue: 'en'
-        },
+        }
     ],
-    exports: [
-        GtwSharedLibsModule,
-        JhiAlertComponent,
-        JhiAlertErrorComponent
-    ]
+    exports: [GtwSharedLibsModule, JhiAlertComponent, JhiAlertErrorComponent]
 })
 export class GtwSharedCommonModule {
-    constructor() {
-        registerLocaleData(locale);
-    }
+    constructor() {}
 }

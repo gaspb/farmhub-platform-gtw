@@ -7,31 +7,31 @@
         <div [ngSwitch]="isAuthenticated()" style="display:none">
             <div class="alert alert-success" *ngSwitchCase="true">
                 <span *ngIf="account"
-                   > You are logged in as user "{{account.login}}". </span>
+                > You are logged in as user "{{account.login}}". </span>
                 <span *ngIf="account"
                 > This platform is a gateway for different not-so-connected microservices projects.
                 It gives you the possibility to test the REST api and interact with our deloyed microservices.</span>
             </div>
 
             <div class="alert alert-warning" *ngSwitchCase="false">
-              Work In Progress
+                Work In Progress
             </div>
         </div>
 
         <div class="home-card-container menu menu--dustu">
-        <div class=" menu__item">
-            <a class=" home-card menu__item-name yellow">
-                Gateway
-            </a>
-            <div class=" home-card-panel">
-                <div class="home-card-desc">The Gateway let you test your microservices' API and generates the appropriate Front-End based on data type and/or on a YAML configuration file. It also allows you to manage the cloud configuration to scale your microservices.</div>
-                <div style="width:100%; display:flex;align-items: center;justify-content: center;">
-                <span style="width:33%" class=" menu__item-label left" routerLink="documentation">Documentation</span>
-                <span style="width:33%" class="menu__item-label " routerLink="dashboard" routerLinkActive="active">Dashboard</span>
-                    <span  style="width:33%" class="menu__item-label right" routerLink="repository" routerLinkActive="active">Repository</span>
+            <div class=" menu__item">
+                <a class=" home-card menu__item-name yellow">
+                    Gateway
+                </a>
+                <div class=" home-card-panel">
+                    <div class="home-card-desc">The Gateway let you test your microservices' API and generates the appropriate Front-End based on data type and/or on a YAML configuration file. It also allows you to manage the cloud configuration to scale your microservices.</div>
+                    <div style="width:100%; display:flex;align-items: center;justify-content: center;">
+                        <span style="width:33%" class=" menu__item-label left" routerLink="documentation">Documentation</span>
+                        <span style="width:33%" class="menu__item-label " routerLink="dashboard" routerLinkActive="active">Dashboard</span>
+                        <span  style="width:33%" class="menu__item-label right" routerLink="repository" routerLinkActive="active">Repository</span>
+                    </div>
                 </div>
             </div>
-        </div>
         </div>
         <div class="home-card-container menu menu--dustu">
             <div class="  menu__item">
@@ -41,11 +41,11 @@
                 <div class=" home-card-panel">
                     <div class="home-card-desc">The Playground allows you to create nodes between all connected microservices' exposed API, templates and YAML configuration file for you MS, either through the Command Line Interface or with the online Dashboard </div>
                     <div style="width:100%; display:flex;align-items: center;justify-content: center">
-                    <span style="width:33%;" class=" menu__item-label left">CLI</span>
-                    <span style="width:33%;" class="menu__item-label right" routerLink="playground" routerLinkActive="active">
+                        <span style="width:33%;" class=" menu__item-label left">CLI</span>
+                        <span style="width:33%;" class="menu__item-label right" routerLink="playground" routerLinkActive="active">
                         Canvas
                     </span>
-                </div>
+                    </div>
                 </div>
             </div>
         </div>

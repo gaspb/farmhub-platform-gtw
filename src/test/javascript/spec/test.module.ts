@@ -1,11 +1,11 @@
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NgModule, ElementRef, Renderer } from '@angular/core';
+import { ElementRef, NgModule, Renderer } from '@angular/core';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { JhiDataUtils, JhiDateUtils, JhiEventManager, JhiAlertService, JhiParseLinks } from 'ng-jhipster';
+import { JhiAlertService, JhiDataUtils, JhiDateUtils, JhiEventManager, JhiParseLinks } from 'ng-jhipster';
 
-import { Principal, AccountService, LoginModalService, JhiTrackerService } from '../../../main/webapp/app/shared';
+import { AccountService, JhiTrackerService, LoginModalService, Principal } from 'app/core';
 import { MockPrincipal } from './helpers/mock-principal.service';
 import { MockAccountService } from './helpers/mock-account.service';
 import { MockActivatedRoute, MockRouter } from './helpers/mock-route.service';
@@ -24,7 +24,7 @@ import { MockEventManager } from './helpers/mock-event-manager.service';
         },
         {
             provide: JhiEventManager,
-            useClass:  MockEventManager
+            useClass: MockEventManager
         },
         {
             provide: NgbActiveModal,
@@ -32,7 +32,7 @@ import { MockEventManager } from './helpers/mock-event-manager.service';
         },
         {
             provide: ActivatedRoute,
-            useValue: new MockActivatedRoute({id: 123})
+            useValue: new MockActivatedRoute({ id: 123 })
         },
         {
             provide: Router,
@@ -65,7 +65,7 @@ import { MockEventManager } from './helpers/mock-event-manager.service';
         {
             provide: NgbModal,
             useValue: null
-        },
+        }
     ],
     imports: [HttpClientTestingModule]
 })

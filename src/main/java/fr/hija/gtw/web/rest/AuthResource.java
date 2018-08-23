@@ -64,6 +64,6 @@ public class AuthResource {
         log.info("logging out user {}", SecurityContextHolder.getContext().getAuthentication().getName());
 
         authenticationService.logout(request, response);
-        return ResponseEntity.ok(null);
+        return ResponseEntity.noContent().build();
     }
 }

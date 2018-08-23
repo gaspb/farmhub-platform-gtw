@@ -1,0 +1,17 @@
+
+<span class="hljs-attr-cont" *ngIf="param.isArray()">
+    "<span class="hljs-attr">{{attr.name}}</span>": [
+    <span class="hljs-attr-inner-cont" *ngFor="let child of param">
+        <hjl-swagger-json (param)="child"></hjl-swagger-json>
+    ],
+    </span>
+</span>
+<span class="hljs-attr-cont" *ngIf="param.isJson()"> {{ '{'
+
+    <span class="hljs-attr-inner-cont" *ngFor="let key of Object.keys(param.paramValue)">
+        "<span class="hljs-attr">{{key}}</span>": <hjl-swagger-json (param)="child"></hjl-swagger-json>
+    </span>
+      '}' }},
+</span>
+    <span class="hljs-string" *ngIf="param.isString()">"string"</span>
+

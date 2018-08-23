@@ -1,18 +1,18 @@
-import {Component, OnInit} from "@angular/core";
-import {Router} from "@angular/router";
-import {NgbModalRef} from "@ng-bootstrap/ng-bootstrap";
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 
-import {ProfileService} from "../profiles/profile.service";
-import {LoginModalService, LoginService, Principal} from "../../shared";
+import { ProfileService } from '../profiles/profile.service';
 
-import {VERSION} from "../../app.constants";
+import { VERSION } from '../../app.constants';
+import { LoginService } from '../../core/login/login.service';
+import { Principal } from '../../core/auth/principal.service';
+import { LoginModalService } from '../../core/login/login-modal.service';
 
 @Component({
     selector: 'jhi-navbar',
     templateUrl: './navbar.component.html',
-    styleUrls: [
-        'navbar.scss'
-    ]
+    styleUrls: ['navbar.scss']
 })
 export class NavbarComponent implements OnInit {
     inProduction: boolean;

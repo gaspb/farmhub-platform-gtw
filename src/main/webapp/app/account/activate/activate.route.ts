@@ -1,7 +1,7 @@
 import { Route } from '@angular/router';
 
-import { UserRouteAccessService } from '../../shared';
 import { ActivateComponent } from './activate.component';
+import { UserRouteAccessService } from '../../core/auth/user-route-access-service';
 
 export const activateRoute: Route = {
     path: 'activate',

@@ -1,28 +1,23 @@
 import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot, RouterStateSnapshot, Routes, CanActivate } from '@angular/router';
-
+import { ActivatedRouteSnapshot, CanActivate, Resolve, RouterStateSnapshot, Routes } from '@angular/router';
+import { Principal } from '../../core/auth/principal.service';
 import { JhiPaginationUtil } from 'ng-jhipster';
-
 import { UserMgmtComponent } from './user-management.component';
 import { UserMgmtDetailComponent } from './user-management-detail.component';
 import { UserDialogComponent } from './user-management-dialog.component';
 import { UserDeleteDialogComponent } from './user-management-delete-dialog.component';
 
-import { Principal } from '../../shared';
-
 @Injectable()
 export class UserResolve implements CanActivate {
-
-    constructor(private principal: Principal) { }
+    constructor(private principal: Principal) {}
 
     canActivate() {
-        return this.principal.identity().then((account) => this.principal.hasAnyAuthority(['ROLE_ADMIN']));
+        return this.principal.identity().then(account => this.principal.hasAnyAuthority(['ROLE_ADMIN']));
     }
 }
 
 @Injectable()
 export class UserResolvePagingParams implements Resolve<any> {
-
     constructor(private paginationUtil: JhiPaginationUtil) {}
 
     resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
@@ -41,7 +36,7 @@ export const userMgmtRoute: Routes = [
         path: 'user-management',
         component: UserMgmtComponent,
         resolve: {
-            'pagingParams': UserResolvePagingParams
+            pagingParams: UserResolvePagingParams
         },
         data: {
             pageTitle: 'Users'

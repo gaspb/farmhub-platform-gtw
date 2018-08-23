@@ -1,7 +1,6 @@
 package fr.hija.gtw.web.rest.errors;
 
 import fr.hija.gtw.web.rest.util.HeaderUtil;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;

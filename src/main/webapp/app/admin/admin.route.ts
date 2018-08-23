@@ -3,35 +3,26 @@ import { Routes } from '@angular/router';
 import {
     configurationRoute,
     docsRoute,
+    gatewayRoute,
     healthRoute,
     logsRoute,
     metricsRoute,
-    gatewayRoute,
     trackerRoute,
-    userMgmtRoute,
-    userDialogRoute
+    userDialogRoute,
+    userMgmtRoute
 } from './';
+import { UserRouteAccessService } from '../core/auth/user-route-access-service';
 
-import { UserRouteAccessService } from '../shared';
+const ADMIN_ROUTES = [configurationRoute, docsRoute, healthRoute, logsRoute, gatewayRoute, trackerRoute, ...userMgmtRoute, metricsRoute];
 
-const ADMIN_ROUTES = [
-    configurationRoute,
-    docsRoute,
-    healthRoute,
-    logsRoute,
-    gatewayRoute,
-    trackerRoute,
-    ...userMgmtRoute,
-    metricsRoute
-];
-
-export const adminState: Routes = [{
-    path: '',
-    data: {
-        authorities: ['ROLE_ADMIN']
+export const adminState: Routes = [
+    {
+        path: '',
+        data: {
+            authorities: ['ROLE_ADMIN']
+        },
+        canActivate: [UserRouteAccessService],
+        children: ADMIN_ROUTES
     },
-    canActivate: [UserRouteAccessService],
-    children: ADMIN_ROUTES
-},
     ...userDialogRoute
 ];

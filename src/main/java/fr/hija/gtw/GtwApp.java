@@ -2,9 +2,7 @@ package fr.hija.gtw;
 
 import fr.hija.gtw.config.ApplicationProperties;
 import fr.hija.gtw.config.DefaultProfileUtil;
-
 import io.github.jhipster.config.JHipsterConstants;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;

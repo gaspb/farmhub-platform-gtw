@@ -31,14 +31,14 @@
     </div>
 
     <div class="pl-form-container">
-        <pipeline-item-form (completeForm)="completeForm($event)" [(formActive)]="formActive" [(formType)]="formType"></pipeline-item-form>
+        <pipeline-item-form (completeForm)="completeForm($event)" [(formActive)]="formActive" [(formType)]="formType"> [MSes]="MSes"</pipeline-item-form>
     </div>
 </div>
     <div class="pl-bottom-container">
         <div class="pl-legend">
             <div>
                 <div class="pl-legend-svg ppl" (click)="addPipeline()">
-                    <i class="fa fa-plus"> </i>
+                    <fa-icon [icon]="'plus'"></fa-icon>
                 </div><span>Endpoint/New Pipeline</span>
             </div>
             <div><div class="pl-legend-svg bdt" (click)="addDataTransformation()">

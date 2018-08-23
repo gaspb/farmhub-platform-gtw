@@ -1,8 +1,8 @@
-import {Route} from "@angular/router";
+import { Route } from '@angular/router';
 
-import {PlaygroundComponent} from "./playground.component";
-import {UserRouteAccessService} from "../shared/auth/user-route-access-service";
-import {OpCanDeactivateGuard} from "./opCanDeactivateGuard.guard";
+import { PlaygroundComponent } from './playground.component';
+import { OpCanDeactivateGuard } from './opCanDeactivateGuard.guard';
+import { UserRouteAccessService } from '../core/auth/user-route-access-service';
 
 export const PLAYGROUND_ROUTE: Route = {
     path: 'playground',

@@ -1,11 +1,7 @@
 package fr.hija.gtw.security.oauth2;
 
 import javax.servlet.http.Cookie;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A Collection of Cookies that allows modification - unlike a mere array.

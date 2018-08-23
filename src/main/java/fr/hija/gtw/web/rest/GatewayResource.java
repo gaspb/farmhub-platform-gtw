@@ -1,19 +1,20 @@
 package fr.hija.gtw.web.rest;
 
+import com.codahale.metrics.annotation.Timed;
+import fr.hija.gtw.security.AuthoritiesConstants;
 import fr.hija.gtw.web.rest.vm.RouteVM;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.netflix.zuul.filters.Route;
 import org.springframework.cloud.netflix.zuul.filters.RouteLocator;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
-import fr.hija.gtw.security.AuthoritiesConstants;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import com.codahale.metrics.annotation.Timed;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * REST controller for managing Gateway configuration.

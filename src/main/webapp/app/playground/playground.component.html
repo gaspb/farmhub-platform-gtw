@@ -19,7 +19,7 @@
         </div>
 
         <div class="dragto pl-view" [hidden]="currView!='dp'">
-            <pipeline-view (toggleOpMenu)="toggleOp($event)" [opView]="false"></pipeline-view>
+            <pipeline-view (toggleOpMenu)="toggleOp($event)" [opView]="false" [(MSes)]="MSes"></pipeline-view>
 
         </div>
 
@@ -39,8 +39,8 @@
                             <span class="api-title ">{{api.path+' :'+api.reqType}}</span>
                             <div [hidden]="isToggledApi!=api || isDraggable!=api" class="api-desc">
 
-                                <div><span class="property prop-io">input : </span><span class="">{{api.inputDataType || 'none'}}</span></div>
-                                <div><span class="property prop-io">output : </span><span class="">{{api.outputDataType || 'none'}}</span></div>
+                                <div><span class="property prop-io">input : </span><span class="" title="{{api.inputJSONType}}">{{api.inputDataType || 'none'}}</span></div>
+                                <div><span class="property prop-io">output : </span><span class="" title="{{api.responseJSONResponseType}}">{{api.responseType || 'none'}}</span></div>
                             </div>
 
                         </li>
@@ -71,6 +71,7 @@
                             <li [hidden]="isToggledOpMenu!='cv'"  draggable="true" class="dragfrom"  *ngFor="let conv of converters" (dragstart)="dragStart('converter', conv)" >
                                 <span title="{{conv.desc}}">{{conv.title}}</span>
                             </li>
+                            <li [hidden]="isToggledOpMenu!='cv'"  (dragstart)="dragStart('javascript', {title: ['Javascript code']})" draggable="true" class="dragfrom">Javascript</li>
 
                         </ul>
                         <ul class="op-menu-entry op-holders"  style="text-align: left;">
@@ -80,6 +81,8 @@
                         </ul>
                         <ul class="op-menu-entry op-input-box" style="text-align: left;">
                             <span  (click)="isToggledOpMenu = isToggledOpMenu=='in' ?  'false': 'in'">Inputs</span>
+                            <li [hidden]="isToggledOpMenu!='in'"  (dragstart)="dragStart('json-input', {title: ['JSON Input']})" draggable="true" class="dragfrom"> JSON input</li>
+
                             <li [hidden]="isToggledOpMenu!='in'" (dragstart)="dragStart('inputContainer', null)" draggable="true" class="dragfrom ">dropzone</li>
                         </ul>
 
@@ -147,7 +150,7 @@
 
                 <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom" data-item="1">New Output Type (?)</li>
                 <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom op-draggable" data-item="2" (dragstart)="dragStart('tp-text-out', null)">textarea</li>
-                <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom" data-item="3">JSON</li>
+                <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom" data-item="3" >JSON</li>
                 <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom" data-item="3">Stream</li>
                 <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom" data-item="3">Datatable</li>
 

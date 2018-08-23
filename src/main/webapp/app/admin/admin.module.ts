@@ -1,41 +1,40 @@
-import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { JhiTrackerService } from './../shared/tracker/tracker.service';
 
 import { GtwSharedModule } from '../shared';
-/* jhipster-needle-add-admin-module-import - JHipster will add admin modules imports here */
-
 import {
     adminState,
-    UserMgmtComponent,
-    UserDialogComponent,
+    GatewayRoutesService,
+    JhiConfigurationComponent,
+    JhiConfigurationService,
+    JhiDocsComponent,
+    JhiGatewayComponent,
+    JhiHealthCheckComponent,
+    JhiHealthModalComponent,
+    JhiHealthService,
+    JhiMetricsMonitoringComponent,
+    JhiMetricsMonitoringModalComponent,
+    JhiMetricsService,
+    JhiTrackerComponent,
+    LogsComponent,
+    LogsService,
     UserDeleteDialogComponent,
+    UserDialogComponent,
+    UserMgmtComponent,
+    UserMgmtDeleteDialogComponent,
     UserMgmtDetailComponent,
     UserMgmtDialogComponent,
-    UserMgmtDeleteDialogComponent,
-    LogsComponent,
-    JhiMetricsMonitoringModalComponent,
-    JhiMetricsMonitoringComponent,
-    JhiHealthModalComponent,
-    JhiHealthCheckComponent,
-    JhiConfigurationComponent,
-    JhiDocsComponent,
-    JhiConfigurationService,
-    JhiHealthService,
-    JhiMetricsService,
-    GatewayRoutesService,
-    JhiGatewayComponent,
-    JhiTrackerComponent,
-    LogsService,
-    UserResolvePagingParams,
+    UserModalService,
     UserResolve,
-    UserModalService
+    UserResolvePagingParams
 } from './';
+import { JhiTrackerService } from '../core/tracker/tracker.service';
+/* jhipster-needle-add-admin-module-import - JHipster will add admin modules imports here */
 
 @NgModule({
     imports: [
         GtwSharedModule,
-        RouterModule.forChild(adminState),
+        RouterModule.forChild(adminState)
         /* jhipster-needle-add-admin-module - JHipster will add admin modules here */
     ],
     declarations: [
@@ -55,12 +54,7 @@ import {
         JhiMetricsMonitoringComponent,
         JhiMetricsMonitoringModalComponent
     ],
-    entryComponents: [
-        UserMgmtDialogComponent,
-        UserMgmtDeleteDialogComponent,
-        JhiHealthModalComponent,
-        JhiMetricsMonitoringModalComponent,
-    ],
+    entryComponents: [UserMgmtDialogComponent, UserMgmtDeleteDialogComponent, JhiHealthModalComponent, JhiMetricsMonitoringModalComponent],
     providers: [
         JhiConfigurationService,
         JhiHealthService,

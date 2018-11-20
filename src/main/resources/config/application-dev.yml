@@ -44,7 +44,15 @@ spring:
                     brokers: 192.168.99.100
                     zk-nodes: 192.168.99.100
             bindings:
-                output:
+                scalaMessageChannel:
+                    destination: scala-ms-in
+                    content-type: application/json
+                scalaSubscribableChannel:
+                    destination: scala-ms-out
+                defaultMessageChannel:
+                    destination: topic-jhipster
+                    content-type: application/json
+                defaultSubscribableChannel:
                     destination: topic-jhipster
     mail:
         host: localhost
@@ -92,11 +100,12 @@ jhipster:
     gateway:
         rate-limiting:
             enabled: false
-            limit: 100000
+            limit: 200000
             duration-in-seconds: 3600
         authorized-microservices-endpoints: # Access Control Policy, if left empty for a route, all endpoints will be accessible
-            app1: /* 
+            app1: /*
             ms1: /api,/v2/api-docs # recommended dev configuration
+            scalapipeline: /api,/v2/api-docs
     http:
         version: V_1_1 # To use HTTP/2 you will need SSL support (see above the "server.ssl" configuration)
     cache: # Cache configuration

@@ -4,6 +4,7 @@ import { MSDTO } from './msdto.model';
 import { ApiDoc } from './apidoc.model';
 import { stringifyIgnoringKey } from '../shared/model/json-util';
 import { isNullOrUndefined } from 'util';
+import { PipelineVM } from './pipeline/pipeline.model';
 
 const httpOptions = {
     headers: new HttpHeaders({ 'Content-Type': 'application/json' })
@@ -12,7 +13,7 @@ const httpOptions = {
 export class PlaygroundService {
     routes: MSDTO[];
     response: String;
-
+    static tempPipelines: PipelineVM[] = []; //TODO
     constructor(private http: HttpClient) {}
     getEndpoints() {
         return this.http.get('api/fwk/endpoints/').map((res: HttpResponse<String>) => res.toString());
@@ -30,6 +31,27 @@ export class PlaygroundService {
     getOperationList() {
         return this.http.get('api/playground/oplist/');
     }
+    getPipelineList() {
+        return PlaygroundService.tempPipelines;
+    }
+    savePipeline(ppl: PipelineVM) {
+        PlaygroundService.tempPipelines.push(ppl);
+        console.log('SAVING PPL ', ppl);
+
+        const headers = new HttpHeaders();
+        headers.append('Accept', 'application/json');
+        headers.append('Content-Type', 'application/json');
+        return this.http.post('scalapipeline/api/test/ppl/', JSON.stringify(ppl), httpOptions); //TODO
+    }
+    stopAndCancelPipeline(ppl: PipelineVM) {
+        PlaygroundService.tempPipelines = PlaygroundService.tempPipelines.filter(s => s != ppl);
+        console.log('REMOVING PPL ', ppl);
+        const headers = new HttpHeaders();
+        headers.append('Accept', 'application/json');
+        headers.append('Content-Type', 'application/json');
+        return this.http.delete('scalapipeline/api/test/ppl/' + ppl.pipelineId.replace('_', '')); //TODO
+    }
+
     saveFullSessionTemplate(tpHtml, opHtml) {
         console.log('SAVING FULL TEMPLATE', tpHtml, opHtml);
         const body = JSON.stringify({ htmlTemplate: tpHtml, htmlOperation: opHtml });

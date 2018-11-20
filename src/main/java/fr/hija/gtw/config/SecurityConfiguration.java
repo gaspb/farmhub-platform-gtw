@@ -16,8 +16,6 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.R
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.CorsFilter;
 
@@ -38,10 +36,7 @@ public class SecurityConfiguration extends ResourceServerConfigurerAdapter {
     public void configure(HttpSecurity http) throws Exception {
         http
             .csrf()
-            .ignoringAntMatchers("/h2-console/**")
-            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-        .and()
-            .addFilterBefore(corsFilter, CsrfFilter.class)
+            .disable()
             .headers()
             .frameOptions()
             .disable()
@@ -50,6 +45,9 @@ public class SecurityConfiguration extends ResourceServerConfigurerAdapter {
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         .and()
             .authorizeRequests()
+			.antMatchers("/scalapipeline").permitAll()
+			.antMatchers("/scalapipeline/api/**").permitAll()
+			.antMatchers("/scalapipeline/**").permitAll()
             .antMatchers("/api/**").authenticated()
             .antMatchers("/api/profile-info").permitAll()
             .antMatchers("/uaa/api/profile-info").permitAll()
@@ -60,6 +58,9 @@ public class SecurityConfiguration extends ResourceServerConfigurerAdapter {
             .antMatchers("/ws1").permitAll()
             .antMatchers("/ws1/cache").permitAll()
             .antMatchers("/websocket/ws1").permitAll()
+            .antMatchers("/websocket/scalams").permitAll()
+            .antMatchers("/scala-ms-subscribe").permitAll()
+            .antMatchers("/scalams").permitAll()
             .antMatchers("/api/playground/**").permitAll()
 
 

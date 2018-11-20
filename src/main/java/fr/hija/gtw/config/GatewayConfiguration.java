@@ -1,11 +1,9 @@
 package fr.hija.gtw.config;
 
-import io.github.jhipster.config.JHipsterProperties;
-
-import fr.hija.gtw.gateway.ratelimiting.RateLimitingFilter;
 import fr.hija.gtw.gateway.accesscontrol.AccessControlFilter;
+import fr.hija.gtw.gateway.ratelimiting.RateLimitingFilter;
 import fr.hija.gtw.gateway.responserewriting.SwaggerBasePathRewritingFilter;
-
+import io.github.jhipster.config.JHipsterProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.netflix.zuul.filters.RouteLocator;
 import org.springframework.context.annotation.Bean;

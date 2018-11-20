@@ -4,9 +4,10 @@ import { RouterModule } from '@angular/router';
 import { GtwSharedModule } from '../shared';
 
 import { HOME_ROUTE, HomeComponent } from './';
+import { ParticlesModule } from 'angular-particle';
 
 @NgModule({
-    imports: [GtwSharedModule, RouterModule.forChild([HOME_ROUTE])],
+    imports: [GtwSharedModule, RouterModule.forChild([HOME_ROUTE]), ParticlesModule],
     declarations: [HomeComponent],
     entryComponents: [],
     providers: [],

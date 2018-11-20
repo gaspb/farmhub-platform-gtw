@@ -4,6 +4,7 @@
         <span class="pg-menu" (click)="operationView=false;currView='tp'" [ngClass]="{ 'pg-menu-selected': currView=='tp'}">Template view</span>
         <span class="pg-menu" (click)="operationView=true;currView='op'" [ngClass]="{ 'pg-menu-selected': currView=='op'}">Operation view</span>
         <span class="pg-menu" (click)="operationView=false;currView='dp'" [ngClass]="{ 'pg-menu-selected': currView=='dp'}">Pipeline view</span>
+        <span class="pg-menu" (click)="operationView=false;currView='au'" [ngClass]="{ 'pg-menu-selected': currView=='au'}">Automation view</span>
 
     </div>
     <div class="pg-container" >
@@ -19,7 +20,7 @@
         </div>
 
         <div class="dragto pl-view" [hidden]="currView!='dp'">
-            <pipeline-view (toggleOpMenu)="toggleOp($event)" [opView]="false" [(MSes)]="MSes"></pipeline-view>
+            <pipeline-view (savePipelineEmitter)="updatePipelines()" (toggleOpMenu)="toggleOp($event)" [opView]="false" [(MSes)]="MSes"></pipeline-view>
 
         </div>
 
@@ -64,7 +65,21 @@
                                 </div>
                             </li>
                         </ul>
-
+            <ul class="op-menu-entry" data-item="0">
+                <span (click)="isToggledOpMenu = isToggledOpMenu=='pl' ?  'false': 'pl'">Pipeline IO</span>
+                <li  draggable="true" class="dragfrom op-draggable"  *ngFor="let pl of pipelines" [hidden]="isToggledOpMenu!='pl'" (dragstart)="dragStart('pipeline', pl)"  style="list-style-type: square;" [ngClass]="{ 'op-toggled': isToggledOp==pl && isDraggable==pl}"  (click)="isToggledOp = pl; isDraggable= pl">
+                                <span>
+                                    {{pl.pipelineId}}
+                                </span>
+                    <div class="desc">somedesc</div>
+                    <div [hidden]="isToggledOp!=pl || isDraggable!=pl" style="font-size: small;margin-left: 5px;">
+                        <!-- <div class="desc">{{op.body.inputDesc || ''}}</div>-->
+                        <div><span class="property prop-io">trigger : </span>{{pl.trigger.name || 'none'}}</div>
+                        <!--<div class="desc">{{op.body.outputDesc || ''}}</div>-->
+                        <div><span class="property prop-io">output : </span>todo</div>
+                    </div>
+                </li>
+            </ul>
                         <ul class="op-menu-entry op-converters" data-item="0" >
                             <span (click)="isToggledOpMenu = isToggledOpMenu=='cv' ?  'false': 'cv'">Converters</span>
                             <li [hidden]="isToggledOpMenu!='cv'"  (dragstart)="dragStart('converter', {title: ['New Map']})" draggable="true" class="dragfrom"> [ New Map ]</li>
@@ -150,6 +165,7 @@
 
                 <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom" data-item="1">New Output Type (?)</li>
                 <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom op-draggable" data-item="2" (dragstart)="dragStart('tp-text-out', null)">textarea</li>
+                <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom op-draggable" data-item="2" (dragstart)="dragStart('tp-log-out', null)">log</li>
                 <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom" data-item="3" >JSON</li>
                 <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom" data-item="3">Stream</li>
                 <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom" data-item="3">Datatable</li>

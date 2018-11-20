@@ -1,4 +1,4 @@
-export * from './tracker/ws1-message.service';
+export * from './tracker/ws-message.service';
 export * from './stack/stack.service';
 export * from './shared-libs.module';
 export * from './shared-common.module';

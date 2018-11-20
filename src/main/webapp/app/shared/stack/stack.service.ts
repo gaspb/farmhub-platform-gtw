@@ -1,20 +1,16 @@
-import {Injectable} from "@angular/core";
-import {NavigationStart, Router} from "@angular/router";
+import { Injectable } from '@angular/core';
+import { NavigationStart, Router } from '@angular/router';
 
 @Injectable()
 export class StackService {
-
-    constructor(
-        private router: Router,
-    ) {
-
+    constructor(private router: Router) {
         router.events.subscribe(event => {
-            if(event instanceof NavigationStart) {
-                console.log("<<<<<<<<<<<<<<<debug8 - ", event.url);
+            if (event instanceof NavigationStart) {
+                console.log(event.url);
             }
         });
     }
-/*
+    /*
     connect(){
         console.log("-------------------------CONNECTION----------------------------------");
         const promise = Promise;
@@ -27,5 +23,4 @@ export class StackService {
         });
     }
 */
-
 }

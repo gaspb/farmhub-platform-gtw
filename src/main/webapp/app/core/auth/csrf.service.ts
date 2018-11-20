@@ -7,6 +7,8 @@ export class CSRFService {
 
     getCSRF(name?: string) {
         name = `${name ? name : 'XSRF-TOKEN'}`;
-        return this.cookieService.get(name);
+        let cc: String = this.cookieService.get(name);
+
+        return cc ? cc : '';
     }
 }

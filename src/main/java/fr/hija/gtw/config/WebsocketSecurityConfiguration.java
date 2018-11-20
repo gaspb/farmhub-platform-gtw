@@ -18,6 +18,11 @@ public class WebsocketSecurityConfiguration extends AbstractSecurityWebSocketMes
             .simpDestMatchers("/topic/message/**").permitAll()
             .simpDestMatchers("/ws1reciever").permitAll()
             .simpDestMatchers("/ws1").permitAll()
+            .simpDestMatchers("/topic/scala-ms-receiver").permitAll()
+            .simpDestMatchers("/topic/scala-ms-receiver/**").permitAll()
+            .simpDestMatchers("/scala-ms-subscribe").permitAll() //TODO
+            .simpDestMatchers("/scalams").permitAll() //TODO
+
             // matches any destination that starts with /topic/
             // (i.e. cannot send messages directly to /topic/)
             // (i.e. cannot subscribe to /topic/messages/* to get messages sent to

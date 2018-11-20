@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { PlaygroundService } from '../playground.service';
-import { PipelineVM } from './pipeline.model';
-import { PipelineItemVM } from './pipeline-item.model';
+import { Branch, Element, EndpointWithTrigger, PipelineVM } from './pipeline.model';
 import { isNullOrUndefined } from 'util';
+import { PipelineItemVM } from './pipeline-item.model';
 
 @Component({
     selector: 'pipeline-view',
@@ -11,12 +11,22 @@ import { isNullOrUndefined } from 'util';
 export class PipelineComponent implements OnInit {
     pipelines: PipelineVM[];
     activePipelineItemDiv;
-    activePipelineItem: PipelineItemVM;
+    activePipelineItem: any;
     activePipeline: PipelineVM;
     formActive = false;
     formType: string;
     formCallback;
+    pplidx = 0;
 
+    @Output() savePipelineEmitter: EventEmitter<any> = new EventEmitter<any>();
+
+    _options = {
+        defaultLineWidth: '35px',
+        defaultMinimalLineWidth: '15px',
+        defaultLineHeight: '10px',
+        defaultItemSizeRatio: 2,
+        defaultItemOffset: 0
+    };
     constructor(private pgService: PlaygroundService) {}
     s;
     ngOnInit() {
@@ -27,10 +37,25 @@ export class PipelineComponent implements OnInit {
     }
     addPipeline() {
         this.openForm('endpoint', function(formResultItem) {
-            let pl = new PipelineVM('Pipeline01');
-            pl.props.endpoint.type = formResultItem.type;
-            pl.props.endpoint.item = formResultItem.data;
+            let pl = new PipelineVM();
+            console.log('recieved endpoint form : ', formResultItem);
+
+            let wrap: EndpointWithTrigger = formResultItem.data;
+            pl.endpoint = wrap.endpoint;
+            pl.endpoint.port = pl.endpoint.port ? parseInt(pl.endpoint.port.toString()) : null;
+            pl.endpoint.endpointType = formResultItem.type;
+            pl.endpoint.kafkaInputKey = '';
+            pl.endpoint.options = {};
+            pl.trigger = wrap.trigger;
+            let branch = new Branch();
+            branch.branchId = 0;
+            branch.parentBranchId = 0;
+            branch.position = 0;
+            pl.branches = [branch];
             this.validateEndpoint(pl);
+            pl.pipelineId = 'Pipeline 0' + ++this.pplidx;
+            pl.trigger.name = 'Trigger-' + pl.pipelineId.replace(' ', '') + Math.random();
+            pl.trigger.outputEndpointURL = btoa(pl.trigger.name);
             this.pipelines.push(pl);
         });
     }
@@ -48,7 +73,8 @@ export class PipelineComponent implements OnInit {
     }
 
     validateEndpoint(pipeline: PipelineVM) {
-        console.log('VALIDATING', pipeline.props.endpoint.item['operationName']);
+        //TODO
+        /*   console.log('VALIDATING', pipeline.props.endpoint.item['operationName']);
         pipeline.props.isValidEndpoint = true;
         let endpoint = new PipelineItemVM('endpoint');
         endpoint.lazyData = {
@@ -57,14 +83,34 @@ export class PipelineComponent implements OnInit {
         if (!pipeline.items || pipeline.items.length == 0) {
             pipeline.items = [endpoint];
         } else {
-            pipeline.items[0] = endpoint;
-        }
+            pipeline.items[0] = endpoint;*/
+        //}
     }
 
     handlePipelineItemClick(pipeline, item, div) {
         this.activePipeline = pipeline;
         this.activePipelineItem = item;
         this.setActivePipelineItemDiv(div);
+    }
+    openModal = false;
+    modalContent = '';
+    showDetails(item: Element, isTrigger) {
+        console.log('SHOW DETAILS', item.outputEndpointURL);
+        this.modalContent =
+            'Details \n\n\n' +
+            (item.elementType || 'TRIGGER') +
+            ' : \n\n' +
+            (item.otype ? item.otype : item.ttype ? item.ttype : '') +
+            '\n\n\n' +
+            (item.outputEndpointURL
+                ? 'URL : ' +
+                  (!isTrigger ? '/scalapipeline/api/test/proxy/stream_json/' : '/scalapipeline/api/test/proxy/run/') +
+                  '\n' +
+                  item.outputEndpointURL
+                : '') +
+            '\n';
+        console.log('MODAL CONTENT', this.modalContent);
+        this.openModal = true;
     }
 
     setActivePipelineItemDiv(div) {
@@ -96,14 +142,25 @@ export class PipelineComponent implements OnInit {
             return false;
         }
         const offset = this.activePipelineItemDiv.classList.contains('before') ? 0 : 1;
-        this.activePipeline.items.splice(this.activePipeline.items.indexOf(this.activePipelineItem) + offset, 0, item);
+        this.activePipeline.branches[0].elements.splice(
+            this.activePipeline.branches[0].elements.indexOf(this.activePipelineItem) + offset,
+            0,
+            item.data
+        );
         this.resetActiveDiv();
     }
 
     addDataTransformation() {
         this.openForm('data-transformation', function(formResultItem) {
+            console.log('Adding data transformation', formResultItem);
+
             let transfo = new PipelineItemVM('data-transformation');
-            transfo.lazyData = formResultItem;
+            let el = new Element();
+            el.name = formResultItem.name;
+            el.elementType = 'TRANSFORMATION';
+            el.opt = formResultItem.data;
+            el.ttype = formResultItem.data.type;
+            transfo.data = el;
             this.insertPipelineItem(transfo);
         });
     }
@@ -113,6 +170,10 @@ export class PipelineComponent implements OnInit {
         transfo.lazyData = {
             name: 'Training'
         };
+        let el = new Element();
+        el.name = 'Model training';
+        el.elementType = transfo.itemType;
+        transfo.data = el;
         this.insertPipelineItem(transfo);
     }
 
@@ -121,18 +182,42 @@ export class PipelineComponent implements OnInit {
         transfo.lazyData = {
             name: 'DbTransaction'
         };
+        let el = new Element();
+        el.name = 'Transaction';
+        el.elementType = transfo.itemType;
+        transfo.data = el;
         this.insertPipelineItem(transfo);
     }
 
     addOutput() {
-        let transfo = new PipelineItemVM('output');
-        transfo.lazyData = {
-            name: 'Output01'
-        };
-        this.insertPipelineItem(transfo);
+        this.openForm('output', function(formResultItem) {
+            let out = new PipelineItemVM('output');
+            out.lazyData = {
+                name: 'Output01'
+            };
+            let el = new Element();
+            el.name = 'Output01' + Math.random();
+            el.elementType = 'OUTPUT';
+            el.opt = formResultItem.data;
+            el.otype = formResultItem.data.type;
+            el.outputEndpointURL = btoa(el.opt.outputEndpointURL ? el.opt.outputEndpointURL.replace(' ', '') : el.name.replace(' ', ''));
+            out.data = el;
+            this.insertPipelineItem(out);
+        });
     }
 
-    saveAndRunPipeline(pipeline: PipelineVM) {
+    savePipeline(pipeline: PipelineVM) {
+        let elems = pipeline.branches[0].elements;
+        let idx = 0;
+        pipeline.branches[0].elements.forEach(elem => (elem.position = idx++));
+        console.log('SAVING PIPELINE', pipeline);
+        this.pgService.savePipeline(pipeline);
+        this.savePipelineEmitter.emit();
+        pipeline.status = 'saved';
+    }
+    runPipeline(pipeline: PipelineVM) {
+        console.log('RUNNING PIPELINE', pipeline);
+
         pipeline.status = 'running';
     }
 

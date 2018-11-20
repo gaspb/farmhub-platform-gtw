@@ -113,7 +113,8 @@ public class PlaygroundService {
     public PlaygroundJSONOperationVM getOperationJSON(String operationName) {
         Cache<String, PlaygroundJSONOperationVM> cache = this.cacheManager.getCache(PG_GLOBAL_OP_JSON_CACHE_NAME);
         PlaygroundJSONOperationVM vm = cache.get(operationName);
-        log.info("PGSERVICE - getOperationJSON - retrieved op "+operationName+" : "+vm.getJsonOperation());
+
+        log.info("PGSERVICE - getOperationJSON - retrieved op "+operationName+" : "+(vm!=null));
         return vm;
     }
     public Set<PlaygroundOperationDescVM> getOperationList() {
@@ -145,9 +146,10 @@ public class PlaygroundService {
                     response.append(output);
                 }
                 in.close();
-                log.error("RETRIEVED SWAGGER : "+response.toString());
+
                 Swagger api = parser.parse(response.toString());
-                log.error("PARSED IT TO SWAGGER : "+api.toString());
+                log.info("Retrieved swagger for endpoint : "+api.getHost());
+
                 apis.add(api);
 
 

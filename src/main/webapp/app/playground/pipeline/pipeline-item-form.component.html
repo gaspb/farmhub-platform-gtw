@@ -10,24 +10,85 @@
                             <select id="pl-endpoint-form-type" (change)="formItem.type=$event.srcElement.value; get(formItem.type);">
                                 <option value="" disabled selected></option>
                                 <option value="op">Operation output</option>
-                                <option value="ms">Microservice</option>
-                                <option value="pa">Public API</option>
-                                <option value="ext">External site</option>
+                                <option value="tcp-stream">TCP Stream</option>
+                                <option data-todo-value="rest-stream" value="AKKA_HTTP_BYTESTRING_READ">REST Stream</option>
+                                <option value="rest-poll">REST Long Polling</option>
+                                <option value="kafka">Kafka</option>
                                 <option value="db">Database</option>
-
                             </select>
 
                         </div>
-                        <div *ngIf="formItem.type=='op'">
-                            <label for="pl-endpoint-form-op" >Operation output</label>
-                            <select id="pl-endpoint-form-op" (change)="selectOp($event.srcElement.value)">
-                                <option value="" disabled selected></option>
-                                <option *ngFor="let op of ops">{{op.operationName}}</option>
+                        <div [ngSwitch]="formItem.type">
+                            <div *ngSwitchCase="'op'">
+                                <label for="pl-endpoint-form-op" >Operation output</label>
+                                <select id="pl-endpoint-form-op" (change)="selectOp($event.srcElement.value)">
+                                    <option value="" disabled selected></option>
+                                    <option *ngFor="let op of ops">{{op.operationName}}</option>
 
+                                </select>
+                            </div>
 
-                            </select>
+                            <div *ngSwitchCase="'tcp-stream'">
+                                TCP stream<br>
+                                <label for="pl-endpoint-form-tcp-address" >Address</label>
+                                <input id="pl-endpoint-form-tcp-address" type="text" (input)="endpoint.address = $event.target.value">
 
+                                <label for="pl-endpoint-form-tcp-port" >Port</label>
+                                <input id="pl-endpoint-form-tcp-port" type="text" (input)="endpoint.port = $event.target.value" >
+                            </div>
+
+                            <div *ngSwitchCase="'AKKA_HTTP_BYTESTRING_READ'">
+                                REST stream<br>
+                                <label for="pl-endpoint-form-rest-stream-address" >Address</label>
+                                <input id="pl-endpoint-form-rest-stream-address" type="text" (input)="endpoint.address = $event.target.value">
+
+                                <label for="l-endpoint-form-rest-stream-port" >Port</label>
+                                <input id="l-endpoint-form-rest-stream-port" type="text" (input)="endpoint.port = $event.target.value">
+
+                            </div>
+
+                            <div *ngSwitchCase="'rest-poll'">
+                                REST poll<br>
+                                <label for="pl-endpoint-form-rest-poll-address" >Address</label>
+                                <input id="pl-endpoint-form-rest-poll-address" type="text" (input)="endpoint.address = $event.target.value">
+
+                                <label for="pl-endpoint-form-rest-poll-port" >Port</label>
+                                <input id="pl-endpoint-form-rest-poll-port" type="text" (input)="endpoint.port = $event.target.value" >
+
+                                <label for="pl-endpoint-form-rest-poll-interval" >Interval(ms)</label>
+                                <input id="pl-endpoint-form-rest-poll-interval" type="text" (input)="endpoint.options = { interval: $event.target.value }">
+                            </div>
+
+                          <div *ngSwitchCase="'kafka'">
+                              Kafka<br>
+                              The default topic is used<br>
+                              <label for="pl-endpoint-kafka-key" >Key</label>
+                              <input id="pl-endpoint-kafka-key" type="text" (input)="endpoint.kafkaInputKey = $event.target.value">
+                            </div>
+
+                            <div *ngSwitchCase="'db'">
+                                TODO
+                            </div>
+                            <br/>
+                            <br/>
+                            <div>
+
+                                <label for="pl-endpoint-form-trigger" >Trigger</label>
+                                <select id="pl-endpoint-form-trigger" (change)="trigger.ttype=$event.srcElement.value;">
+                                    <option value="" disabled selected></option>
+                                    <option value="SIMPLE_RUN" >Manual</option>
+                                    <option value="ENDPOINT" >Endpoint call</option>
+                                    <option value="EVENT" >Pipeline event</option>
+                                </select>
+                            </div>
+                            <button class="dsb-add"  (click)="emitEndpointWtTrigger()">Add</button>
+                            <button class="dsb-back"  (click)="cancel()">Back</button>
                         </div>
+
+
+
+
+
                         <div *ngIf="formItem.type=='ms'" style="height:100%">
                             <label for="pl-endpoint-form-ms" >Registered microservices</label>
                             <select id="pl-endpoint-form-ms" (change)="selectMs($event.srcElement.value)">
@@ -55,16 +116,106 @@
             <div *ngSwitchCase="'data-transformation'">
                 Please select a data transformation
                 <div class="pl-select-bdt-container">
-                    <div class="pl-square" *ngFor="let bdt of bdts" (click)="selectBdt(bdt)">
+                    <div class="pl-square" *ngFor="let bdt of bdts"  [ngClass]="{'full':bdtt===bdt}">
                         <div class="pl-content">
                             <div class="pl-table">
-                                <div class="pl-table-cell">
+                                <div *ngIf="bdtt!=bdt" class="pl-table-cell" (click)="openBdt(bdt)">
                                     {{bdt}}
                                 </div>
-                            </div>
+								<div *ngIf="bdtt==bdt && bdtt.trim()==='Map'" class="pl-table-cell pl-table-cell-full">
+                                    <div>From :
+                                        <select (change)="opt.from = $event.srcElement.value">
+											<option selected disabled></option>
+											  <option value="ANY">*</option>
+                                            <option value="BYTESTRING">Bytes</option>
+                                            <option value="STRING">String</option>
+											<option value="NUM">Numerical value</option>
+                                            <option value="JSON">JSON</option>
+                                        </select>
+										<br/>
+										To :
+										<select (change)="opt.to = $event.srcElement.value">
+											<option selected disabled></option>
+                                            <option value="BYTESTRING">Bytes</option>
+                                            <option value="STRING">String</option>
+											<option value="NUM">Numerical value</option>
+                                            <option value="JSON">JSON</option>
+                                        </select>
+										
+                                    </div>
+
+
+                                    <button class="dsb-add"  (click)="selectBdt(bdt)">Add</button>
+                                    <button class="dsb-back"  (click)="cancel()">Back</button>
+                                </div>
+                                <div *ngIf="bdtt==bdt && bdtt.trim()==='Occurrences'" class="pl-table-cell pl-table-cell-full">
+                                    <div>Words to exclude :
+                                        <select (change)="opt.excludeCommonWords = $event.srcElement.value">
+                                            <option value="">None</option>
+                                            <option value="true">Common words</option>
+                                            <option value="false">Custom</option>
+                                        </select>
+                                        <div *ngIf="opt.excludeCommonWords=='false'">
+                                            <textarea name="">todo put common words here</textarea>
+                                        </div>
+                                        <br/>
+                                        <br/>
+                                        <span>To avoid memory leaks, the max number of words kept in memory is set to 500.</span>
+                                        <br/>
+                                    </div>
+
+
+                                    <button class="dsb-add"  (click)="selectBdt(bdt)">Add</button>
+                                    <button class="dsb-back"  (click)="cancel()">Back</button>
+                                </div>
+                                <div *ngIf="bdtt==bdt && bdtt.trim()==='Reduce'" class="pl-table-cell pl-table-cell-full">
+
+                                    <span>Reduce <span *ngIf="opt.type && opt.type.indexOf('_COLLECTION')>=0">level {{opt.type.split('_COLLECTION').length-1}} collection</span> : </span>
+                                    <select *ngIf="!opt.type || opt.type.indexOf('_COLLECTION')===0" (change)="opt.type = opt.type ? $event.srcElement.value + opt.type : $event.srcElement.value">
+                                        <option></option>
+
+                                        <option value="MATHS">Maths</option>
+                                        <option value="GROUP_BY">GroupBy</option>
+                                        <option value="THRESHOLD">Threshold</option>
+                                        <option value="_COLLECTION" >Reduce Collection</option>
+                                        <option value="STREAM_HEAD" title="take first element of the stream">Head</option>
+                                        <option value="STREAM_TAIL" title="take last element of the stream">Tail </option>
+                                    </select>
+
+                                    <div [ngSwitch]="opt.type ? (opt.type).split('_COLLECTION').shift() : opt.type">
+
+                                        <div *ngSwitchCase="'MATHS'">
+                                            Math Reduction :
+                                            <select (change)="opt.type = opt.type ? $event.srcElement.value + opt.type : $event.srcElement.value">
+                                                <option></option>
+                                                <option value="MATH_MIN">Min</option>
+                                                <option value="MATH_MAX">Max</option>
+                                                <option value="MATH_SUM">Sum</option>
+                                                <option value="MATH_PRODUCT">Product</option>
+                                                <option value="MATH_DIVIDE">Divide</option>
+                                                <option value="MATH_COMPOSE">Compose</option>
+                                                <option value="MATH_PYTHON">Custom python</option>
+                                            </select>
+                                        </div>
+
+                                        <div *ngSwitchCase="'THRESHOLD'">
+                                            X : <input (input)="opt.top=$event.srcElement.value">
+                                        </div>
+                                        <div *ngSwitchCase="'STREAM_HEAD'">
+                                            Take first X : <input (input)="opt.top=$event.srcElement.value">
+                                        </div>
+                                        <div *ngSwitchCase="'STREAM_TAIL'">
+                                            Take last X : <input (input)="opt.top=$event.srcElement.value">
+                                        </div>
+
+                                    </div>
+                                    <button class="dsb-add"  (click)="selectBdt(bdt)">Add</button>
+                                    <button class="dsb-back"  (click)="cancel()">Back</button>
+                                </div>
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
             <div *ngSwitchCase="'model-training'">
                 Please select a data transformation
@@ -73,12 +224,21 @@
                 Please select a data transformation
             </div>
             <div *ngSwitchCase="'output'">
-                Please select a data transformation
+                Please select an output
+
+                <select (change)="selectOut($event.srcElement.value)">
+                    <option></option>
+                    <option>Blob</option>
+                    <option value="TO_DOWNLOADABLE_FILE">File</option>
+                    <option>TCP Stream</option>
+                    <option>Websocket</option>
+                    <option>Kafka</option>
+                </select>
+
+                <button class="dsb-add"  (click)="emit()">Add</button>
             </div>
-            <div *ngSwitchCase="'output'">
-                Please select a data transformation
-            </div>
-            </div>
+
+
 
         </div>
 

@@ -2,15 +2,21 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { PlaygroundService } from './playground.service';
 import { isNullOrUndefined } from 'util';
+import { WsMessageService } from '../shared/tracker/ws-message.service';
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class OperationLogicService {
-    constructor(private http: HttpClient, private pgSvc: PlaygroundService) {}
+    constructor(private http: HttpClient, private pgSvc: PlaygroundService, private wsMessageService: WsMessageService) {}
 
-    parseJsonOperationForRun(jsonOperation) {}
+    unsubscribeAll() {
+        this.wsMessageService.unsubscribe();
+    }
 
     async execute(opItemType, input, body?) {
-        let res = {};
+        let res = {
+            body: null
+        };
         console.log('OpLogicService - Executing item of type ' + opItemType + ' with input : ' + input + ' and body:', body);
         switch (opItemType) {
             case 'api':
@@ -35,20 +41,40 @@ export class OperationLogicService {
                     t = await this.http.post(path, input).toPromise();
                 }
 
-                res['body'] = t;
+                res.body = t;
                 console.log('----RETURNING ', t);
                 break;
-            case 'operation':
+            case 'operation': //only operations with input => promise, not observable
                 let bodyJson = await this.pgSvc.getOperationJSON(body.operationName).toPromise();
-                res['body'] = await this.runOpLogic(bodyJson['jsonOperation'], input);
+                res.body = this.runOpLogic(bodyJson['jsonOperation'], input);
 
                 break;
             case 'json-input':
                 let obj = JSON.parse(body.content);
-                res['body'] = obj;
+                res.body = obj;
 
                 break;
             case 'inputContainer':
+                break;
+            case 'pipeline':
+                //TODO
+                console.log('---PIPELINE BODY ', body);
+                //v1 : websocket
+                this.wsMessageService.connect('scalams').then(queue => {
+                    //TODO skip if already connected
+                    console.log('CONNECTED TO WS : ', queue);
+                });
+                console.log('---SENDING RUN TO scalapipeline/api/test/ppl/run/' + body.trigger.outputEndpointURL);
+                this.http.get('scalapipeline/api/test/ppl/run/' + body.trigger.outputEndpointURL);
+
+                const self = this;
+                setTimeout(function() {
+                    self.wsMessageService.subscribe('scala-ms-receiver');
+                    self.wsMessageService.sendPplMessage('init');
+                }, 200);
+
+                res.body = this.wsMessageService.receive();
+
                 break;
             case 'converter':
                 break;
@@ -71,9 +97,9 @@ export class OperationLogicService {
                 const t = await this.http.get(url).toPromise();
 
                 if (t && t[0] && t[0][0]) {
-                    res['body'] = t[0][0][0];
+                    res.body = t[0][0][0];
                 } else {
-                    res['body'] = t;
+                    res.body = t;
                 }
 
                 break;
@@ -81,17 +107,17 @@ export class OperationLogicService {
                 break;
             case 'javascript':
                 const data = input;
-                res['body'] = eval(body.content);
+                res.body = eval(body.content);
                 break;
             default:
                 console.log('no item of type :' + opItemType + ' is registered');
         }
 
-        console.log('OpLogicService - Returned item promise ', res);
-        return res['body'];
+        console.log('OpLogicService - Returned item promise ', res.body);
+        return res.body;
     }
 
-    public async runOpLogic(opLogic, input) {
+    public runOpLogic(opLogic, input): Observable<any> {
         const logic = opLogic;
         console.log('RUN LOGIC ', opLogic);
         let excludedKeys = ['link', 'operationName', 'desc'];
@@ -138,7 +164,7 @@ export class OperationLogicService {
         if (isNullOrUndefined(links[ORIG_ELEM_ID]) || isNullOrUndefined(links[END_ELEM_ID])) {
             console.log('WARNING - Op not closed. Returning');
             alert('DevMode - Please close the OP circuit'); //TODO
-            return false;
+            return Observable.never();
         }
         console.log('Running an operation composed of ' + elemCount + ' components');
 
@@ -150,14 +176,78 @@ export class OperationLogicService {
         chain = this.buildCallChain(allElements, links, ORIG_ELEM_ID, '5', chain, END_ELEM_ID, elemMinus2);
         console.log(chain);
 
+        /*//TODO V1 : simple sync chain
         for (const p of chain) {
-            await this.execute(p['itemType'], input, p['elemToExecute']).then(data => {
+            await this.execute(p['itemType'], input, p['elemToExecute']).then(data => { //TODO pipe, so than multiple inputs will trigger following elements each time
+                //TODO + have an observable end-element to associate to the template
                 console.log('result ', data);
                 input = data;
             });
         }
-        console.log('--- END : ', input);
-        return input;
+        console.log('--- END : ', input);*/
+        //return input;
+
+        //V1.5 same promise chain but wrapped in an observable
+        //TODO V2 : observable piping
+        //only 1st element of an operation can be an observable, if the input side is not connected
+        let i = 0;
+        console.log('========== Preparing 0 ============');
+        let next = () => chain[i++];
+        let self = this;
+        function getNext(inputVal): any {
+            console.log('========== GETNEXT - input: ', inputVal);
+            let nx = next();
+            return self.execute(nx['itemType'], inputVal, nx['elemToExecute']);
+        }
+        function getOne(idx, inputVal): any {
+            console.log('========== GET ONE - input, idx ', inputVal);
+            let nx = chain[idx];
+            return self.execute(nx['itemType'], inputVal, nx['elemToExecute']);
+        }
+        const firstRes: any = getNext(input);
+        let obs = null;
+        obs = this.asObservable(firstRes);
+
+        for (let x = 1; x < chain.length; x++) {
+            const i = x;
+            console.log('PIPE ', i);
+            obs = obs.map(prev => {
+                console.log('IN MAP - ', prev);
+                return getOne(i, prev);
+            });
+        }
+        console.log('RETURNING OBS', obs);
+        //temp1.subscribe(data=>console.log(data))
+        return obs;
+    }
+
+    public asObservable(some): Observable<any> {
+        if (some instanceof Observable) {
+            console.log('firstRes is OBS', some);
+            return some;
+        } else if (some instanceof Promise) {
+            let prom: Promise = some;
+            console.log('firstRes is wrapped OBS', some, prom);
+            return new Observable<any>(observer => {
+                prom.then(obs => this.flattenObservable(obs, observer));
+            });
+        } else {
+            console.log('firstRes is NOT OBS', some);
+            return Observable.of(some);
+        }
+    }
+    private flattenObservable(some, observer) {
+        if (some instanceof Observable) {
+            console.log('Flattening', some);
+            some.subscribe(data => {
+                this.flattenObservable(data, observer);
+            });
+        } else {
+            this.asObservable(some).subscribe(data => {
+                console.log('Flattened observer data', data);
+                observer.next(data);
+            });
+        }
     }
 
     private buildCallChain(allElements, links, previousElem, input, chain, endElementId, elemMinus2): [{}] {

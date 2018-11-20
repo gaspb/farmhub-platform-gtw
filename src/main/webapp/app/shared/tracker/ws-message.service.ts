@@ -14,7 +14,7 @@ import { Ws1MessageModel } from '../../demos/realtime/ws1.message.model';
 import { Account } from '../../core/user/account.model';
 
 @Injectable()
-export class Ws1MessageService {
+export class WsMessageService {
     stompClient = null;
     subscriber = null;
     connection: Promise<any>;
@@ -36,18 +36,27 @@ export class Ws1MessageService {
         this.connection = this.createConnection();
         this.listener = this.createListener();
     }
-
-    connect() {
+    connectedWebsockets = [];
+    connect(websocketPath: string) {
+        //ws1
+        if (this.connectedWebsockets.indexOf(websocketPath) >= 0) {
+            console.log('Websocket ' + websocketPath + ' is already connected');
+            return new Promise();
+        }
+        this.connectedWebsockets.push(websocketPath);
         if (this.connectedPromise === null) {
             this.connection = this.createConnection();
+        }
+        if (this.listener == null || this.listenerObserver == null) {
+            this.listener = this.createListener();
         }
         // building absolute path so that websocket doesn't fail when deploying with a context path
         const loc = this.$window.nativeWindow.location;
         let url;
-        url = '//' + loc.host + loc.pathname + 'websocket/ws1';
+        url = '//' + loc.host + loc.pathname + 'websocket/' + websocketPath;
         const authToken = this.authServerProvider.getToken() | this.localStorageService.retrieve('token');
         if (authToken) {
-            url += '?access_token=' + authToken;
+            url += '?access_token=' + authToken + '';
         }
 
         const socket = new SockJS(url);
@@ -62,21 +71,23 @@ export class Ws1MessageService {
             if (!this.alreadyConnectedOnce) {
                 this.subscription = this.router.events.subscribe(event => {
                     if (event instanceof NavigationEnd) {
-                        // this.sendMessage("ended", event.login);
+                        this.sendPplMessage('ended' + event.login);
                     }
                 });
                 this.alreadyConnectedOnce = true;
             }
         });
 
-        return this.getMessages()
-            .toPromise()
-            .then(response => {
-                const queue = response.body;
-                console.log('RECIEVED QUEUE : ' + queue.length);
-                console.log(queue);
-                return queue;
-            });
+        return websocketPath === 'ws1'
+            ? this.getMessages()
+                  .toPromise()
+                  .then(response => {
+                      const queue = response.body;
+                      console.log('RECIEVED QUEUE : ' + queue.length);
+                      console.log(queue);
+                      return queue;
+                  })
+            : new Promise();
     }
 
     getMessages(): Observable<HttpResponse<Ws1MessageModel[]>> {
@@ -92,6 +103,7 @@ export class Ws1MessageService {
             this.subscription.unsubscribe();
             this.subscription = null;
         }
+        this.connectedWebsockets = [];
         this.alreadyConnectedOnce = false;
     }
 
@@ -108,7 +120,7 @@ export class Ws1MessageService {
             );
         }
     }
-    sendMessage(arg: string, account: Account) {
+    sendWs1Message(arg: string, account: Account) {
         const role =
             account.authorities.length == 0
                 ? 'anonymous'
@@ -123,10 +135,23 @@ export class Ws1MessageService {
             );
         }
     }
+    sendPplMessage(arg: string) {
+        console.log('IN SEND MESSAGE : ', arg, this.stompClient, this.stompClient.connected);
+        const body = JSON.stringify({ body: arg });
+        if (this.stompClient !== null && this.stompClient.connected) {
+            console.log('SENDING MESSAGE : ', body);
+            this.stompClient.send(
+                '/scala-ms-subscribe', // destination
+                body, // body
+                {} // header
+            );
+        }
+    }
 
-    subscribe() {
+    subscribe(subscribePath: string) {
+        //message/out
         this.connection.then(() => {
-            this.subscriber = this.stompClient.subscribe('/topic/message/out', data => {
+            this.subscriber = this.stompClient.subscribe('/topic/' + subscribePath, data => {
                 console.log('RECIEVED DATA', data);
                 this.listenerObserver.next(JSON.parse(data.body));
             });

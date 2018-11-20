@@ -1,5 +1,7 @@
 package fr.hija.gtw.config;
 
+import fr.hija.gtw.web.kafka.ConsumerChannel;
+import fr.hija.gtw.web.kafka.ProducerChannel;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.messaging.Source;
 
@@ -11,7 +13,7 @@ import org.springframework.cloud.stream.messaging.Source;
  * See http://docs.spring.io/spring-cloud-stream/docs/current/reference/htmlsingle/
  * for the official Spring Cloud Stream documentation.
  */
-@EnableBinding(value = { Source.class })
+@EnableBinding(value = { Source.class, ProducerChannel.class, ConsumerChannel.class})
 public class MessagingConfiguration {
 
     /**

@@ -13,7 +13,7 @@ import { StateStorageService } from '../core/auth/state-storage.service';
 import { Principal } from '../core/auth/principal.service';
 import { CSRFService } from '../core/auth/csrf.service';
 import { JhiTrackerService } from '../core/tracker/tracker.service';
-import { Ws1MessageService } from './tracker/ws1-message.service';
+import { WsMessageService } from './tracker/ws-message.service';
 import { AuthServerProvider } from '../core/auth/auth-jwt.service';
 import { StackService } from './stack/stack.service';
 import { UserService } from '../core/user/user.service';
@@ -30,7 +30,7 @@ import { UserService } from '../core/user/user.service';
         Principal,
         CSRFService,
         JhiTrackerService,
-        Ws1MessageService,
+        WsMessageService,
         AuthServerProvider,
         StackService,
         UserService,

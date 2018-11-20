@@ -3,35 +3,57 @@
         <span class="topMenu"><span>+ Configure a new data pipeline</span></span>
     </div>
 <div class="pl-container">
-    <div *ngIf="formActive" class="pl-overlay"></div>
+    <div *ngIf="formActive || openModal" class="pl-overlay" (click)="formActive=false;formType='';openModal=false"></div>
     <div *ngFor="let pipeline of pipelines" style="position:relative;">
-        <span  class="ppl-name {{pipeline.status}}" contenteditable="true" spellcheck="false">{{pipeline.pipelineName}}</span>
-        <div *ngIf="!pipeline.items || pipeline.items.length==0" class="pl-pipeline" [style.width]="pipeline.options.defaultMinimalLineWidth" [style.height]="pipeline.options.defaultLineHeight">
+        <span  class="ppl-name {{pipeline.status}}" contenteditable="true" spellcheck="false">{{pipeline.pipelineId}}</span>
+        <div *ngIf="!pipeline.endpoint" class="pl-pipeline" [style.width]="_options.defaultMinimalLineWidth" [style.height]="_options.defaultLineHeight">
         </div>
-        <div  *ngFor="let item of pipeline.items" class="pl-item-container">
-            <div class="pl-item" (click)="handlePipelineItemClick(pipeline, item, $event.target)">
-                <div class="pl-pipeline before" [style.width]="pipeline.options.defaultLineWidth" [style.height]="pipeline.options.defaultLineHeight" [ngClass]="{'first':item._itemType=='endpoint'}"></div>
+        <div *ngFor="let branch of pipeline.branches"  class="pl-item-container">
+            <div *ngIf="pipeline.endpoint!=null" class="pl-item" (click)="handlePipelineItemClick(pipeline, pipeline.endpoint, $event.target)">
+                <div class="pl-pipeline before first" [style.width]="_options.defaultLineWidth" [style.height]="_options.defaultLineHeight" ></div>
 
                 <div style="position:relative">
-                    <div class="pl-item-text">{{item._lazyData.name}}</div>
-                    <div class="pl-pl-svg {{item._itemType}}" >
+                    <div class="pl-item-text" (click)="showDetails(pipeline.trigger, true)">{{pipeline.endpoint.name}}</div>
+                    <div class="pl-pl-svg endpoint" >
                         <svg height="22" width="20"> <circle cx="10" cy="10" fill="none" r="9" stroke-width="2.5"></circle> </svg>
                     </div>
                 </div>
-                <div class="pl-pipeline after" [style.width]="pipeline.options.defaultMinimalLineWidth" [style.height]="pipeline.options.defaultLineHeight"></div>
+                <div class="pl-pipeline after" [style.width]="_options.defaultMinimalLineWidth" [style.height]="_options.defaultLineHeight"></div>
 
             </div>
+
+           <div *ngFor="let item of branch.elements" class="pl-item" (click)="handlePipelineItemClick(pipeline, item, $event.target)">
+                <div class="pl-pipeline before" [style.width]="_options.defaultLineWidth" [style.height]="_options.defaultLineHeight"></div>
+
+                <div style="position:relative">
+                    <div class="pl-item-text">{{item.name}}</div>
+                    <div class="pl-pl-svg {{item.elementType}}" (click)="showDetails(item, false)">
+                        <svg height="22" width="20"> <circle cx="10" cy="10" fill="none" r="9" stroke-width="2.5"></circle> </svg>
+                    </div>
+                </div>
+                <div class="pl-pipeline after" [style.width]="_options.defaultMinimalLineWidth" [style.height]="_options.defaultLineHeight"></div>
+
+            </div>
+
 
         </div>
 
 
-
         <span class="pl-save" (click)="deletePipeline(pipeline)">X</span>
-        <span class="pl-save" (click)="pipeline.status!='running' ? saveAndRunPipeline(pipeline) : stopPipeline(pipeline)">{{pipeline.status=='running' ? 'stop' : 'save and start'}}</span>
+        <span class="pl-save" (click)="savePipeline(pipeline)">{{pipeline.status=='saved' ? 'saved!' : 'save'}}</span>
+        <span class="pl-save" (click)="pipeline.status!='running' ? runPipeline(pipeline) : stopPipeline(pipeline)">{{pipeline.status=='running' ? 'stop' : 'start'}}</span>
     </div>
 
     <div class="pl-form-container">
-        <pipeline-item-form (completeForm)="completeForm($event)" [(formActive)]="formActive" [(formType)]="formType"> [MSes]="MSes"</pipeline-item-form>
+        <pipeline-item-form (completeForm)="completeForm($event)" [(formActive)]="formActive" [(formType)]="formType"></pipeline-item-form>
+    </div>
+    <div class="pl-form-container" *ngIf="openModal">
+        <div class="pl-form">
+            <div style="white-space: pre; font-size:smaller">
+                {{modalContent}}
+            </div>
+
+        </div>
     </div>
 </div>
     <div class="pl-bottom-container">

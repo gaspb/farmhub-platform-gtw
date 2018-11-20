@@ -16,6 +16,8 @@ export class JhiLoginModalComponent implements AfterViewInit {
     rememberMe: boolean;
     username: string;
     credentials: any;
+    radioToken = false;
+    allowLogin = true;
 
     constructor(
         private eventManager: JhiEventManager,
@@ -44,6 +46,7 @@ export class JhiLoginModalComponent implements AfterViewInit {
     }
 
     login() {
+        this.allowLogin = false;
         this.loginService
             .login({
                 username: this.username,
@@ -69,9 +72,11 @@ export class JhiLoginModalComponent implements AfterViewInit {
                     this.stateStorageService.storeUrl(null);
                     this.router.navigate([redirect]);
                 }
+                this.allowLogin = true;
             })
             .catch(() => {
                 this.authenticationError = true;
+                this.allowLogin = true;
             });
     }
 

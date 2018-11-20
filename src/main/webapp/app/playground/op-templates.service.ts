@@ -17,6 +17,24 @@ export class OpTemplateService {
         let element;
         const body = data;
         switch (datatype) {
+            case 'pipeline':
+                template =
+                    '<div id="' +
+                    elementId +
+                    '" class="op-tp op-tp-api"><div class="title">' +
+                    data.pipelineId +
+                    '</div>' +
+                    '<div style="display:none"><span class="json-attribute ms-i-att">' +
+                    data.inputJSONMinimalType +
+                    '</span><span class="json-attribute ms-o-att"></span></div>' +
+                    '<div class="ms-o o-op" data-op="connect"><span class="property">' +
+                    'Reactive' +
+                    '</span><span class="io">O</span></div>' +
+                    '<div class="ms-i i-op" data-op="connect"><span class="property trigger">' +
+                    '--trigger' +
+                    '</span><span class="io">I</span></div></div>';
+
+                break;
             case 'api':
                 template =
                     '<div id="' +
@@ -234,13 +252,26 @@ export class OpTemplateService {
                 break;
             case 'tp-text-out':
                 template =
-                    '<div id="' +
+                    '<div data-hjl-outtype="text" id="' +
                     elementId +
                     '" class="op-tp tp-text-out op-tp-output" >' +
                     '<textfield class="tp-output"></textfield>' +
-                    '<i class="fa fa-sitemap connect-fa" aria-hidden="true" data-op="connect" data-op-io="output" data-tp-type="' +
+                    '<fa-icon class="connect-fa ng-fa-icon" data-op="connect" data-op-io="output"  data-tp-type="' +
                     datatype +
-                    '"></i>' +
+                    '"><svg aria-hidden="true" class="svg-inline--fa fa-sitemap fa-w-20" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path fill="currentColor" d="M128 352H32c-17.67 0-32 14.33-32 32v96c0 17.67 14.33 32 32 32h96c17.67 0 32-14.33 32-32v-96c0-17.67-14.33-32-32-32zm-24-80h192v48h48v-48h192v48h48v-57.59c0-21.17-17.23-38.41-38.41-38.41H344v-64h40c17.67 0 32-14.33 32-32V32c0-17.67-14.33-32-32-32H256c-17.67 0-32 14.33-32 32v96c0 17.67 14.33 32 32 32h40v64H94.41C73.23 224 56 241.23 56 262.41V320h48v-48zm264 80h-96c-17.67 0-32 14.33-32 32v96c0 17.67 14.33 32 32 32h96c17.67 0 32-14.33 32-32v-96c0-17.67-14.33-32-32-32zm240 0h-96c-17.67 0-32 14.33-32 32v96c0 17.67 14.33 32 32 32h96c17.67 0 32-14.33 32-32v-96c0-17.67-14.33-32-32-32z"></path></svg></fa-icon>' +
+                    '<span class="tp-input-linked-op"></span>' +
+                    '<span class="tp-output-value"></span>' +
+                    '</div>';
+                break;
+            case 'tp-log-out':
+                template =
+                    '<div data-hjl-outtype="log" id="' +
+                    elementId +
+                    '" class="op-tp tp-log-out op-tp-output" >' +
+                    '<textfield class="tp-output"></textfield>' +
+                    '<fa-icon class="connect-fa ng-fa-icon" data-op="connect" data-op-io="output"  data-tp-type="' +
+                    datatype +
+                    '"><svg aria-hidden="true" class="svg-inline--fa fa-sitemap fa-w-20" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path fill="currentColor" d="M128 352H32c-17.67 0-32 14.33-32 32v96c0 17.67 14.33 32 32 32h96c17.67 0 32-14.33 32-32v-96c0-17.67-14.33-32-32-32zm-24-80h192v48h48v-48h192v48h48v-57.59c0-21.17-17.23-38.41-38.41-38.41H344v-64h40c17.67 0 32-14.33 32-32V32c0-17.67-14.33-32-32-32H256c-17.67 0-32 14.33-32 32v96c0 17.67 14.33 32 32 32h40v64H94.41C73.23 224 56 241.23 56 262.41V320h48v-48zm264 80h-96c-17.67 0-32 14.33-32 32v96c0 17.67 14.33 32 32 32h96c17.67 0 32-14.33 32-32v-96c0-17.67-14.33-32-32-32zm240 0h-96c-17.67 0-32 14.33-32 32v96c0 17.67 14.33 32 32 32h96c17.67 0 32-14.33 32-32v-96c0-17.67-14.33-32-32-32z"></path></svg></fa-icon>' +
                     '<span class="tp-input-linked-op"></span>' +
                     '<span class="tp-output-value"></span>' +
                     '</div>';

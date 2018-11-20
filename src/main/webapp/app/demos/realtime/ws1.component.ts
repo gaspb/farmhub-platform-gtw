@@ -2,7 +2,7 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { JhiEventManager } from 'ng-jhipster';
 
-import { Ws1MessageService } from '../../shared/tracker/ws1-message.service';
+import { WsMessageService } from '../../shared/tracker/ws-message.service';
 import { CookieService } from 'ngx-cookie';
 import { CSRFService } from '../../core/auth/csrf.service';
 import { LoginModalService } from '../../core/login/login-modal.service';
@@ -29,14 +29,14 @@ export class Ws1Component implements OnInit {
         private principal: Principal,
         private loginModalService: LoginModalService,
         private eventManager: JhiEventManager,
-        private ws1MessageService: Ws1MessageService,
+        private ws1MessageService: WsMessageService,
         private cookieService: CookieService,
         private csrfSvc: CSRFService
     ) {}
 
     onEnteredMessage($event) {
         console.log($event);
-        this.ws1MessageService.sendMessage($event, this.account);
+        this.ws1MessageService.sendWs1Message($event, this.account);
     }
     ngOnInit() {
         this.principal.isAuthenticated()
@@ -49,10 +49,10 @@ export class Ws1Component implements OnInit {
         this.registerAuthenticationSuccess();
         this.toggled = false;
         //TRACKER WEBSOCKET
-        this.ws1MessageService.connect().then(queue => {
+        this.ws1MessageService.connect('ws1').then(queue => {
             this.activities = queue;
         });
-        this.ws1MessageService.subscribe();
+        this.ws1MessageService.subscribe('/message/out');
 
         this.ws1MessageService.receive().subscribe(message => {
             this.displayMessages(message);

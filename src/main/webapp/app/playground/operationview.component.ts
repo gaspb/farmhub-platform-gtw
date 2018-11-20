@@ -5,6 +5,7 @@ import { PlaygroundService } from './playground.service';
 import { Observable } from 'rxjs/Observable';
 import { OperationLogicService } from './operation-logic.service';
 import { downloadAsFile } from '../shared/util/file-util';
+import { Subscription } from 'rxjs/Rx';
 
 @Component({
     selector: 'operation-view',
@@ -14,23 +15,23 @@ import { downloadAsFile } from '../shared/util/file-util';
                           <span class="topMenu"><span [ngClass]="saveBtn==='Save' ? 'save' : ('saved'+ (isOp?'-op':'-tp'))" (click)="save()">{{saveBtn}}</span><span class="new" (click)="empty()">New</span><span class="load" (click)="load()">Load</span><span [ngClass]="{'test' : testMode} " class="try" (click)="isOp ? runOpLogic() : testTemplate()">{{isOp ? 'Run' : testMode ? 'TEST MODE' : 'Test'}}</span><span (click)="downloadJSON()"><fa-icon [icon]="'download'"></fa-icon></span>
                               </span><span class="op-trash-right trash" *ngIf="isOp" (click)="isTrashActive = !isTrashActive"><fa-icon [icon]="'trash-alt'"></fa-icon></span>
                       <div class="op-desc-cont"><h3 contenteditable="true" spellcheck="false" class="pg-title" (blur)="cpName = $event.srcElement.textContent; saveBtn = 'Save'">{{cpName}}</h3>
-                      <div class="op-desc-value" draggable="false">Desc : <textarea class="op-desc" spellcheck="false"></textarea></div></div>
+                      <!--<div class="op-desc-value" draggable="false">Desc : <textarea class="op-desc" spellcheck="false"></textarea></div>--></div>
                   </div>
                   <div class="op-display" [ngClass]="displayContent!=null ? 'open' : ''">
                       <span style="font-weight:500">Output</span>                  
                       <textarea disabled>{{displayContent}}</textarea>
-                      <button (click)="displayContent=null">Close</button>
+                      <button (click)="displayContent=null;cancel()">Close</button>
                   </div>
 <div id="op-content-{{instanceId}}" class="op-content"  (dragleave)="isDraggedOver=false" (drop)="isDraggedOver=false" (dragover)="dragOver()" [ngClass]="{ 'dragtome': isDraggedOver==true, 'testMode' : testMode}">
     <div class="op-overlay" (click)="hideOverlay($event)"></div>
 </div>
-                  <div class="i-o-bar" *ngIf="isOp" > <div id="o-op-0" class="o-op io-op-main" ><span class="io">I</span></div>
-                      <div id="i-op-0" class="i-op io-op-main"  ><span class="io">O</span></div></div>
+                  <div class="i-o-bar" *ngIf="isOp" > <div id="o-op-0" class="o-op io-op-main" ><span class="io pointer"  data-op="connect">I</span></div>
+                      <div id="i-op-0" class="i-op io-op-main"  ><span class="io pointer"  data-op="connect">O</span></div></div>
               </div>`
 })
 export class OperationComponent implements OnDestroy {
     isDraggedOver: boolean;
-    displayContent = null;
+    displayContent /*: Observable<string> = null*/;
     isTrashDraggedOver: boolean;
     isTrashActive: boolean;
     instanceId: any;
@@ -173,16 +174,45 @@ export class OperationComponent implements OnDestroy {
             OperationComponent[this.isOp ? 'jsonTemplate' : 'jsonOperation'] = {};
         }
     }
-    public displayOpResult(result) {
+    /* public displayOpResult(result) {
         this.displayContent = JSON.stringify(result, null, 4);
-    }
+    }*/
 
     /**
      * START RUN OP
      */
+
+    public cancel() {
+        if (this.obs) {
+            this.subscription.unsubscribe();
+            this.opLogicService.unsubscribeAll();
+        }
+    }
+    obs: Observable;
+    subscription: Subscription;
     public async runOpLogic() {
-        //TODO remove input prompt when no input, and adapt it to json/string
-        this.displayOpResult(await this.opLogicService.runOpLogic(this.getLogic(), prompt('input ?')));
+        //TODO remove input prompt when no input, and adapt it to json/websocket/document etc
+
+        //TODO : choose subscribe or runOnce
+        //TODO As this page allows testing, one time is enough. Go to template to see reactive outputs
+
+        this.obs = this.opLogicService.runOpLogic(this.getLogic(), prompt('input ?'));
+        console.log('RECEIVED OBS IN RUNOPLOGIC', this.obs);
+
+        const self = this;
+        this.subscription = this.obs.subscribe(prom => {
+            console.log('prom:', prom);
+            if (prom instanceof Promise) {
+                prom.then(data => (self.displayContent = JSON.stringify(data, null, 4)));
+            } else {
+                self.displayContent = JSON.stringify(prom, null, 4);
+            }
+        });
+
+        /*  let subscribe = this.opLogicService.runOpLogic(this.getLogic(), prompt('input ?')).subscribe(data => {
+            console.log("Subscribable returned data :", data);
+            this.displayContent =  JSON.stringify(data, null, 4)
+        });*/
     }
 
     listenedTemplateElems = [];
@@ -197,7 +227,7 @@ export class OperationComponent implements OnDestroy {
         //TODO filter out unconnected elems or duplicates
 
         const inputs = ['tp-button', 'tp-text'];
-        const outputs = ['tp-datatable-out', 'tp-text-out'];
+        const outputs = ['tp-datatable-out', 'tp-text-out', 'tp-log-out'];
         //get all Ids
         const logic = this.getLogic();
         let operations = {};
@@ -226,9 +256,25 @@ export class OperationComponent implements OnDestroy {
             console.log('D2', op, input, input.id, document.getElementById(input.id));
             function _tpButtonClickHandler() {
                 let inputVal = input.body;
-                self.opLogicService
-                    .execute('operation', inputVal, { operationName: op })
-                    .then(out => (document.getElementById(output.id).getElementsByClassName('tp-output-value')[0].textContent = out));
+                let obs = self.opLogicService.asObservable(self.opLogicService.execute('operation', inputVal, { operationName: op }));
+                let subscriber = obs.subscribe(data => {
+                    console.log('=====_____DATA--', data);
+                    let div = document.getElementById(output.id);
+                    switch (div.getAttribute('data-hjl-outtype')) {
+                        case 'text':
+                            div.getElementsByClassName('tp-output-value')[0].textContent = data;
+                            break;
+                        case 'log':
+                            div.getElementsByClassName('tp-output-value')[0].innerHTML += '<br/>' + data;
+                            break;
+                        case 'datatable':
+                            break;
+                        case 'graph':
+                            break;
+                    }
+
+                    //.textContent = data;
+                });
             }
 
             //temp => TODO try not tu use document.getElementById but create actual divs in another layer and attach drectly events to them (so they are destroyed on test end)

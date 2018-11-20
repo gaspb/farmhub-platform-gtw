@@ -1,0 +1,91 @@
+<div *ngIf="formActive">
+
+    <div class="pl-form {{formType}}">
+        <div [ngSwitch]="formType" style="height:100%">
+            <div *ngSwitchCase="'endpoint'" style="height:100%">
+
+                    <form style="height:100%">
+                        <div *ngIf="!formItem.type">
+                            <label for="pl-endpoint-form-type" >Endpoint type</label>
+                            <select id="pl-endpoint-form-type" (change)="formItem.type=$event.srcElement.value; get(formItem.type);">
+                                <option value="" disabled selected></option>
+                                <option value="op">Operation output</option>
+                                <option value="ms">Microservice</option>
+                                <option value="pa">Public API</option>
+                                <option value="ext">External site</option>
+                                <option value="db">Database</option>
+
+                            </select>
+
+                        </div>
+                        <div *ngIf="formItem.type=='op'">
+                            <label for="pl-endpoint-form-op" >Operation output</label>
+                            <select id="pl-endpoint-form-op" (change)="selectOp($event.srcElement.value)">
+                                <option value="" disabled selected></option>
+                                <option *ngFor="let op of ops">{{op.operationName}}</option>
+
+
+                            </select>
+
+                        </div>
+                        <div *ngIf="formItem.type=='ms'" style="height:100%">
+                            <label for="pl-endpoint-form-ms" >Registered microservices</label>
+                            <select id="pl-endpoint-form-ms" (change)="selectMs($event.srcElement.value)">
+                                <option value="" disabled selected></option>
+                                <option *ngFor="let ms of MSes">{{ms.serviceId}}</option>
+
+
+                            </select>
+                            <div *ngIf="selectedMS!=null" style="height: 100%;overflow: auto;padding-right: 50px; margin-right: -30px;scroll-behavior: smooth;">
+                                <span >{{selectedMS.serviceId}} APIs</span>
+                                <div class="pl-endpoint-form-ms-api" *ngFor="let api of selectedMS.apiDoc">
+                                    <div (click)="selectMsApi(api)">{{api.path+'::'+api.reqType}}</div>
+                                    <div class="hjl-json-content"  *ngIf="selectedApi ==(api.path+'::'+api.reqType)">
+                                        <pre><code class="hljs json">{{currentPrettyJSON}}</code></pre>
+                                    </div>
+
+                                </div>
+
+
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+            <div *ngSwitchCase="'data-transformation'">
+                Please select a data transformation
+                <div class="pl-select-bdt-container">
+                    <div class="pl-square" *ngFor="let bdt of bdts" (click)="selectBdt(bdt)">
+                        <div class="pl-content">
+                            <div class="pl-table">
+                                <div class="pl-table-cell">
+                                    {{bdt}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div *ngSwitchCase="'model-training'">
+                Please select a data transformation
+            </div>
+            <div *ngSwitchCase="'database-transaction'">
+                Please select a data transformation
+            </div>
+            <div *ngSwitchCase="'output'">
+                Please select a data transformation
+            </div>
+            <div *ngSwitchCase="'output'">
+                Please select a data transformation
+            </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+

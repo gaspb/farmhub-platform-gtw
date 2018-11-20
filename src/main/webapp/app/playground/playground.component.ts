@@ -9,6 +9,7 @@ import { DragNDropDirective } from './dragndrop.directive';
 import { OperationComponent } from './operationview.component';
 import { Principal } from '../core/auth/principal.service';
 import { LoginModalService } from '../core/login/login-modal.service';
+import { PipelineVM } from './pipeline/pipeline.model';
 
 @Component({
     selector: 'jhi-playground',
@@ -26,6 +27,7 @@ export class PlaygroundComponent implements OnInit, OnDestroy {
     toggled;
     routes: ApiDoc[];
     MSes: MSDTO[];
+    pipelines: PipelineVM[];
     OPes: any;
     pbcApis: any;
     converters: any;
@@ -222,6 +224,10 @@ export class PlaygroundComponent implements OnInit, OnDestroy {
         console.log('UPDATENG COMPONENT VAR -' + ev.name + ' - current :  ', this[ev.name]);
         console.log('WITH : ', ev.value);
         this[ev.name] = ev.value;
+    }
+
+    updatePipelines() {
+        this.pipelines = this.pgService.getPipelineList();
     }
 
     @HostListener('document:keydown', ['$event'])

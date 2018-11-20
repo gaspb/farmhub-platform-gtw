@@ -27,6 +27,9 @@ import { MSTemplateModule } from './framework/mstemplate.module';
 import { GtwWs1Module } from './demos/realtime/ws1.module';
 import { GtwIotModule } from './iot/iot.module';
 import { UserRouteAccessService } from './core/auth/user-route-access-service';
+import { GtwAboutTheLabModule } from './aboutthelab/aboutthelab.module';
+import { GtwGetStartedModule } from './getstarted/getstarted.module';
+import { ParticlesModule } from 'angular-particle';
 
 @NgModule({
     imports: [
@@ -45,7 +48,10 @@ import { UserRouteAccessService } from './core/auth/user-route-access-service';
         PlaygroundModule,
         GtwDocumentationModule,
         GtwDashboardModule,
-        GtwRepoModule
+        GtwRepoModule,
+        GtwAboutTheLabModule,
+        GtwGetStartedModule,
+        ParticlesModule
         // jhipster-needle-angular-add-module JHipster will add new module here
     ],
     declarations: [JhiMainComponent, NavbarComponent, ErrorComponent, PageRibbonComponent, FooterComponent, StackComponent],

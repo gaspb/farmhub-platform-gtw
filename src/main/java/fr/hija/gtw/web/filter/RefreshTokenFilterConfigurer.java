@@ -1,7 +1,6 @@
 package fr.hija.gtw.web.filter;
 
 import fr.hija.gtw.security.oauth2.OAuth2AuthenticationService;
-
 import org.springframework.security.config.annotation.SecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationProcessingFilter;

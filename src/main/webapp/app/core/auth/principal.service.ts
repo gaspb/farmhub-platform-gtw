@@ -3,7 +3,7 @@ import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import { AccountService } from './account.service';
 import { JhiTrackerService } from '../tracker/tracker.service';
-import { Ws1MessageService } from '../../shared/tracker/ws1-message.service';
+import { WsMessageService } from '../../shared/tracker/ws-message.service';
 
 @Injectable()
 export class Principal {
@@ -11,7 +11,7 @@ export class Principal {
     private authenticated = false;
     private authenticationState = new Subject<any>();
 
-    constructor(private account: AccountService, private trackerService: JhiTrackerService, private ws1MessageService: Ws1MessageService) {}
+    constructor(private account: AccountService, private trackerService: JhiTrackerService, private ws1MessageService: WsMessageService) {}
 
     authenticate(identity) {
         this.userIdentity = identity;
@@ -73,7 +73,7 @@ export class Principal {
                     this.userIdentity = account;
                     this.authenticated = true;
                     this.trackerService.connect();
-                    this.ws1MessageService.connect();
+                    /*this.ws1MessageService.connect();*/ //TODO connection/disconnect linked to ws1 controller
                 } else {
                     this.userIdentity = null;
                     this.authenticated = false;
@@ -86,9 +86,9 @@ export class Principal {
                 if (this.trackerService.stompClient && this.trackerService.stompClient.connected) {
                     this.trackerService.disconnect();
                 }
-                if (this.ws1MessageService.stompClient && this.ws1MessageService.stompClient.connected) {
+                /* if (this.ws1MessageService.stompClient && this.ws1MessageService.stompClient.connected) {
                     this.ws1MessageService.disconnect();
-                }
+                }*/
 
                 this.userIdentity = null;
                 this.authenticated = false;

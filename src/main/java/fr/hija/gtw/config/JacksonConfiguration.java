@@ -1,7 +1,6 @@
 package fr.hija.gtw.config;
 
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.zalando.problem.ProblemModule;

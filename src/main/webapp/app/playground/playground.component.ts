@@ -10,6 +10,9 @@ import { OperationComponent } from './operationview.component';
 import { Principal } from '../core/auth/principal.service';
 import { LoginModalService } from '../core/login/login-modal.service';
 import { PipelineVM } from './pipeline/pipeline.model';
+import { DashboardService } from '../dashboard/dashboard.service';
+import { OpTemplateService } from './op-templates.service';
+import { CurrentComponentDTO } from './current-components.model';
 
 @Component({
     selector: 'jhi-playground',
@@ -38,15 +41,29 @@ export class PlaygroundComponent implements OnInit, OnDestroy {
     draggedItem = '123';
     tpFiltering = false;
     currView = 'tp';
+    openCustomModal = false;
+    customModalContent;
+    outputs;
+    current;
     //su
 
     constructor(
         private principal: Principal,
         private loginModalService: LoginModalService,
         private eventManager: JhiEventManager,
-        private pgService: PlaygroundService
+        private pgService: PlaygroundService,
+        private dsbService: DashboardService,
+        private opTemplateService: OpTemplateService
     ) {
         this.itemToDrop = {};
+        dsbService.currentEventEmitter.subscribe(curr => {
+            if (curr) {
+                console.log('Current Evnet Emitter - setting DashboardComponent current', curr);
+                this.current = curr;
+                this.outputs = this.current.components.templateComponents;
+                this.opTemplateService.registerTpAndEvents(this.current.components);
+            }
+        });
     }
 
     ngOnInit() {
@@ -58,11 +75,9 @@ export class PlaygroundComponent implements OnInit, OnDestroy {
         this.pgService.getEndpoints().subscribe(response => {
             this.test3 = response;
         });
-
         //this.MSes = this.pgService.getMockMS();
         this.OPes = this.pgService.getMockOp();
         this.loadPublicApis();
-
         const test = this.pgService.getOperationList().subscribe(
             data => {
                 console.log('GET OPS ', data);
@@ -72,14 +87,7 @@ export class PlaygroundComponent implements OnInit, OnDestroy {
                 console.log('ERROR', error);
             }
         );
-        const OPFromCache2 = this.pgService.getOperationJSON('Any to ES').subscribe(
-            data => {
-                console.log('GET OP TEMPLATE 0101 ', data);
-            },
-            error => {
-                console.log('ERROR', error);
-            }
-        );
+
         this.converters = this.pgService.getMockConverters();
         this.loadSwaggerRegisteredMicroservices();
         // this.routes.push(this.test);
@@ -212,10 +220,10 @@ export class PlaygroundComponent implements OnInit, OnDestroy {
                 this.toggleOp('');
                 obj.tpItem.classList.remove('tp-connect-active');
             }
-            OperationComponent.jsonTemplate[obj.tpItem.getAttribute('data-tp-type')][obj.tpItem.parentElement.id] = {
-                op: obj.op,
-                io: obj.tpItem.dataset.io
-            };
+            console.log('DEBUG11', obj);
+            let json = OperationComponent.jsonTemplate[obj.tpItem.getAttribute('data-tp-type')][obj.tpItem.parentElement.id] || {};
+            json.op = obj.op;
+            json.io = obj.tpItem.dataset.io;
         }
     }
 
@@ -228,6 +236,93 @@ export class PlaygroundComponent implements OnInit, OnDestroy {
 
     updatePipelines() {
         this.pipelines = this.pgService.getPipelineList();
+    }
+
+    firstModalOpen = true;
+    doOpenModal(type) {
+        switch (type) {
+            case 'output': {
+                this.openCustomModal = true;
+                if (this.firstModalOpen) {
+                    this.firstModalOpen = false;
+
+                    let modalDiv = document.getElementById('customModalContent');
+
+                    modalDiv.innerHTML = `
+    
+    
+                        <div contenteditable="true" spellcheck="false" data-cmc="name" class="out-id">My Output</div>
+                        <div>
+                            HTML : 
+                            
+                            <div contenteditable="true" spellcheck="false" style="border: 1px solid #fff;" data-cmc="html">&lt;div&gt;&lt;input class="my-class-name"/&gt;&lt;/div&gt;&lt;div class="my-output"&gt;&lt;/div&gt;</div>
+    
+                        </div>
+                        <div>
+                            JS events : <div contenteditable="true" spellcheck="false" style="border: 1px solid #fff;" data-cmc="events">ex : [{
+                                "type": "input",
+                                "target" : ".my-class-name",
+                                "bound" : "myProperty"
+                            }]</div>
+                        </div>
+                        <div>
+                            Dependencies : <div contenteditable="true" spellcheck="false" style="border: 1px solid #fff;" data-cmc="dependencies">https://any-cdn.co/my-library.min.js</div>
+                        </div>
+                        <div>
+                            Core JS
+                            <div>
+                               init (body) => {<div contenteditable="true" spellcheck="false" style="border: 1px solid #fff;" data-cmc="initjs">alert("init "+body.myProperty);
+    document.getElementsByClassName("my-output")[0].textContent = "init";</div>}
+                            </div>
+                            <div>
+                                update (data,body) => {<div contenteditable="true" spellcheck="false" style="border: 1px solid #fff;" data-cmc="updatejs">alert("update "+data+","+body.myProperty);
+    document.getElementsByClassName("my-output")[0].textContent = "update";</div>}
+                            </div>
+                             <div>
+                                destroy (body) => {<div contenteditable="true" spellcheck="false" style="border: 1px solid #fff;" data-cmc="destroyjs">alert("destroy")</div>}
+                            </div>
+                        </div>
+                        
+                        <button class="cmc-save">Save</button>
+                    
+                    `;
+
+                    let self = this;
+                    modalDiv.querySelector('.cmc-save').addEventListener('click', ev => {
+                        let output = {};
+                        let inputs = modalDiv.querySelectorAll('[data-cmc]');
+                        for (let x = 0; x < inputs.length; x++) {
+                            let content = inputs[x].textContent.trim();
+                            let property = inputs[x].getAttribute('data-cmc');
+                            console.log('adding output property', property, content, output);
+                            output[property] = content;
+                        }
+                        //TODO register in op-template service and in playgound-service
+                        console.log('saving new output', output);
+                        //self.outputs.push(output);
+                        let id = output['name'].toLowerCase().replace(' ', '') + Math.random();
+                        output['id'] = id;
+                        try {
+                            self.current.components.templateComponents.push(output);
+                            self.dsbService.saveCurrentDTO().subscribe();
+                            self.pgService.addMockTemplateOutput(output);
+                            self.opTemplateService.addTpandEvents(
+                                output['id'],
+                                'output',
+                                output['html'],
+                                output['events']
+                                    ? JSON.parse(output['events'].replace(/(['"])?([a-z0-9A-Z_]+)(['"])?:/g, '"$2": ').replace(/(')/g, '"'))
+                                    : []
+                            );
+                        } catch (e) {
+                            alert('An error occurred, view the logs for more information');
+                            console.log(e);
+                        }
+                        self.openCustomModal = false;
+                    });
+                }
+            }
+        }
     }
 
     @HostListener('document:keydown', ['$event'])

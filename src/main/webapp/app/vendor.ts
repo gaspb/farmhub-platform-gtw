@@ -19,6 +19,8 @@ import {
     faHeart,
     faHome,
     faInfinity,
+    faInfo,
+    faInfoCircle,
     faList,
     faPencilAlt,
     faPlus,
@@ -82,5 +84,7 @@ library.add(faAsterisk);
 library.add(faSitemap);
 library.add(faDownload);
 library.add(faInfinity);
+library.add(faInfoCircle);
+library.add(faInfo);
 
 // jhipster-needle-add-element-to-vendor - JHipster will add new menu items here

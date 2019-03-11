@@ -26,12 +26,28 @@
                     <span>Dashboard</span>
                 </a>
             </li>
+            <li *ngSwitchCase="true">
+                <a class="nav-item nav-link" routerLink="repository"  >
+                    <span>Community</span>
+                </a>
+            </li>
+            <li *ngSwitchCase="true" ngbDropdown class="nav-item dropdown pointer"  placement="bottom-right">
+
+                <a class="nav-link dropdown-toggle" ngbDropdownToggle href="javascript:void(0);" id="notif-menu">
+                    <span style="position:relative">
+                        <fa-icon [icon]="'bell'"></fa-icon>
+                        <div class="notif-number">{{userNotifications.length}}</div>
+                    </span>
+                </a>
+                <ul *ngFor="let notifVM of userNotifications" (click)="joinTeam(notif.value)" class="dropdown-menu notification-menu" ngbDropdownMenu>
+                    <li ><span class="dsb-invite-content">{{notifVM.notif.fromUser}} has invited you to team {{notifVM.notif.value}}</span> <span class="dsb-inv-actions">x</span><span class="dsb-inv-actions" routerLink="{{notifVM.route}}" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">join</span></li>
+                </ul>
+            </li>
             <!-- jhipster-needle-add-element-to-menu - JHipster will add new menu items here -->
-            <li *jhiHasAnyAuthority="'ROLE_ADMIN'" ngbDropdown class="nav-item dropdown pointer" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+            <li *jhiHasAnyAuthority="'ROLE_ADMIN'" ngbDropdown class="nav-item dropdown pointer"  placement="bottom-right"  routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
                 <a class="nav-link dropdown-toggle" ngbDropdownToggle href="javascript:void(0);" id="admin-menu">
                     <span>
                         <fa-icon [icon]="'user-plus'"></fa-icon>
-                        <span>Administration</span>
                     </span>
                 </a>
                 <ul class="dropdown-menu" ngbDropdownMenu>
@@ -94,10 +110,9 @@
             </li>
             <li *ngSwitchCase="true" ngbDropdown class="nav-item dropdown pointer" placement="bottom-right" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
                 <a class="nav-link dropdown-toggle" ngbDropdownToggle href="javascript:void(0);" id="account-menu">
-                  <span *ngIf="!getImageUrl()">
-                    <fa-icon [icon]="'user'"></fa-icon>
+                  <span>
                     <span>
-                      Account
+                      {{this.principal.login ? this.principal.login : 'Anonymous'}}
                     </span>
                   </span>
                     <span *ngIf="getImageUrl()">
@@ -128,18 +143,6 @@
             </li>
 
 
-
-            <li *ngSwitchCase="false">
-                <a class="nav-item" (click)="login()">
-                    <span>Documentation</span>
-                </a>
-            </li>
-
-            <li *ngSwitchCase="false">
-                <a class="nav-item" (click)="login()">
-                    <span>Products</span>
-                </a>
-            </li>
             <li *ngSwitchCase="false">
                 <a class="nav-item" (click)="login()">
                     <span>Sign in</span>

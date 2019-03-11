@@ -29,14 +29,14 @@ public class ActivityService implements ApplicationListener<SessionDisconnectEve
     }
 
     @MessageMapping("/topic/activity")
-    @SendTo("/topic/tracker")
-    public ActivityDTO sendActivity(@Payload ActivityDTO activityDTO, StompHeaderAccessor stompHeaderAccessor, Principal principal) {
+    //@SendToUser("/topic/tracker")
+    public void sendActivity(@Payload ActivityDTO activityDTO, StompHeaderAccessor stompHeaderAccessor, Principal principal) {
         activityDTO.setUserLogin(principal.getName());
         activityDTO.setSessionId(stompHeaderAccessor.getSessionId());
         activityDTO.setIpAddress(stompHeaderAccessor.getSessionAttributes().get(IP_ADDRESS).toString());
         activityDTO.setTime(Instant.now());
         log.debug("Sending user tracking data {}", activityDTO);
-        return activityDTO;
+        this.sendToUser(activityDTO);
     }
 
     @Override
@@ -45,5 +45,9 @@ public class ActivityService implements ApplicationListener<SessionDisconnectEve
         activityDTO.setSessionId(event.getSessionId());
         activityDTO.setPage("logout");
         messagingTemplate.convertAndSend("/topic/tracker", activityDTO);
+    }
+
+    private void sendToUser(ActivityDTO activityDTO){
+        messagingTemplate.convertAndSendToUser("user","/topic/tracker", activityDTO);
     }
 }

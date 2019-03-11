@@ -14,3 +14,4 @@ export * from './login/login.component';
 export * from './util/request-util';
 export * from './util/datepicker-adapter';
 export * from './util/file-util';
+export * from './notification/notification-modal.component';

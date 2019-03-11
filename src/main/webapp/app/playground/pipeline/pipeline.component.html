@@ -5,7 +5,7 @@
 <div class="pl-container">
     <div *ngIf="formActive || openModal" class="pl-overlay" (click)="formActive=false;formType='';openModal=false"></div>
     <div *ngFor="let pipeline of pipelines" style="position:relative;">
-        <span  class="ppl-name {{pipeline.status}}" contenteditable="true" spellcheck="false">{{pipeline.pipelineId}}</span>
+        <span  class="ppl-name {{pipeline.status}}" contenteditable="true" spellcheck="false" (input)="pipeline.pipelineId = $event.srcElement.textContent.trim()">{{pipeline.pipelineId}}</span>
         <div *ngIf="!pipeline.endpoint" class="pl-pipeline" [style.width]="_options.defaultMinimalLineWidth" [style.height]="_options.defaultLineHeight">
         </div>
         <div *ngFor="let branch of pipeline.branches"  class="pl-item-container">
@@ -41,7 +41,8 @@
 
         <span class="pl-save" (click)="deletePipeline(pipeline)">X</span>
         <span class="pl-save" (click)="savePipeline(pipeline)">{{pipeline.status=='saved' ? 'saved!' : 'save'}}</span>
-        <span class="pl-save" (click)="pipeline.status!='running' ? runPipeline(pipeline) : stopPipeline(pipeline)">{{pipeline.status=='running' ? 'stop' : 'start'}}</span>
+        <span class="pl-save" (click)="pipeline.status!='running' ? deployPipeline(pipeline) : stopPipeline(pipeline)">{{pipeline.status=='running' ? 'remove' : 'deploy'}}</span>
+        <span class="pl-save" (click)="downloadPipelineJSON(pipeline)"><fa-icon [icon]="'download'"></fa-icon></span>
     </div>
 
     <div class="pl-form-container">
@@ -65,7 +66,7 @@
             </div>
             <div><div class="pl-legend-svg bdt" (click)="addDataTransformation()">
                <svg height="20" width="20"> <circle cx="10" cy="10" fill="none" r="8" stroke-width="1"></circle> </svg>
-                </div><span>Big Data transformations</span></div>
+                </div><span>Data transformation</span></div>
             <div><div class="pl-legend-svg mdt" (click)="addModelTraining()">
                <svg height="20" width="20"> <circle cx="10" cy="10" fill="none" r="8" stroke-width="1"></circle> </svg>
                 </div><span>Model training</span></div>

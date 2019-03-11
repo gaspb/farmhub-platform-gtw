@@ -5,7 +5,6 @@ import { SERVER_API_URL } from '../../app.constants';
 
 @Injectable()
 export class JhiHealthService {
-
     separator: string;
 
     constructor(private http: HttpClient) {
@@ -18,7 +17,7 @@ export class JhiHealthService {
 
     transformHealthData(data): any {
         const response = [];
-        this.flattenHealthData(response, null, data);
+        this.flattenHealthData(response, null, data, true);
         return response;
     }
 
@@ -60,7 +59,7 @@ export class JhiHealthService {
                 }
             }
         }
-
+        console.log('adding data object', healthData, hasDetails, details);
         // Add the details
         if (hasDetails) {
             healthData.details = details;
@@ -73,15 +72,25 @@ export class JhiHealthService {
         return healthData;
     }
 
-    private flattenHealthData(result, path, data): any {
+    private flattenHealthData(result, path, data, first?): any {
+        //DEBUG
+        console.log('flatten--------0 : ', result, path, data);
+        if (data.details && data.status && first) {
+            data = data.details;
+        }
+        //END DEBUG
         for (const key in data) {
             if (data.hasOwnProperty(key)) {
+                console.log('debug--------0 : ', key);
                 const value = data[key];
                 if (this.isHealthObject(value)) {
+                    console.log('debug--------1 : ', value);
                     if (this.hasSubSystem(value)) {
+                        console.log('debug--------2 : ', value);
                         this.addHealthObject(result, false, value, this.getModuleName(path, key));
                         this.flattenHealthData(result, this.getModuleName(path, key), value);
                     } else {
+                        console.log('debug--------3 : ', value);
                         this.addHealthObject(result, true, value, this.getModuleName(path, key));
                     }
                 }
@@ -94,7 +103,7 @@ export class JhiHealthService {
         let result;
         if (path && name) {
             result = path + this.separator + name;
-        }  else if (path) {
+        } else if (path) {
             result = path;
         } else if (name) {
             result = name;

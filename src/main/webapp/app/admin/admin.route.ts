@@ -13,7 +13,17 @@ import {
 } from './';
 import { UserRouteAccessService } from '../core/auth/user-route-access-service';
 
-const ADMIN_ROUTES = [configurationRoute, docsRoute, healthRoute, logsRoute, gatewayRoute, trackerRoute, ...userMgmtRoute, metricsRoute];
+const ADMIN_ROUTES = [
+    configurationRoute,
+    docsRoute,
+    healthRoute,
+    logsRoute,
+    gatewayRoute,
+    trackerRoute,
+    ...userMgmtRoute,
+    ...userDialogRoute,
+    metricsRoute
+];
 
 export const adminState: Routes = [
     {

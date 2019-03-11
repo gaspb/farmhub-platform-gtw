@@ -56,13 +56,13 @@ public class SecurityConfiguration extends ResourceServerConfigurerAdapter {
             .antMatchers("/websocket/ws1/info").permitAll()//TODO
             .antMatchers("/ws1reciever").permitAll()
             .antMatchers("/ws1").permitAll()
+            .antMatchers("/queue").permitAll()
             .antMatchers("/ws1/cache").permitAll()
             .antMatchers("/websocket/ws1").permitAll()
             .antMatchers("/websocket/scalams").permitAll()
             .antMatchers("/scala-ms-subscribe").permitAll()
             .antMatchers("/scalams").permitAll()
             .antMatchers("/api/playground/**").permitAll()
-
 
             .antMatchers("/management/health").permitAll()
             .antMatchers("/management/info").permitAll()

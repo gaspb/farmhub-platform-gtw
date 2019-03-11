@@ -13,9 +13,10 @@ import { OpCanDeactivateGuard } from './opCanDeactivateGuard.guard';
 import { OperationLogicService } from './operation-logic.service';
 import { PipelineComponent } from './pipeline/pipeline.component';
 import { PipelineItemFormComponent } from './pipeline/pipeline-item-form.component';
+import { GtwWs1Module } from '../demos/realtime/ws1.module';
 
 @NgModule({
-    imports: [GtwSharedModule, RouterModule.forRoot([PLAYGROUND_ROUTE], { useHash: true })],
+    imports: [GtwSharedModule, GtwWs1Module, RouterModule.forRoot([PLAYGROUND_ROUTE], { useHash: true })],
     declarations: [
         PlaygroundComponent,
         DragNDropDirective,

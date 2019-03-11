@@ -1,0 +1,186 @@
+
+<div class="dashboard-container">
+    <h3>Dashboard</h3>
+
+    <div class="home-page-1 home-page-4" style="width:100%">
+        <div class="home-page-1-cont" >
+            <div class="home-page-1-desc">
+                 <span><br/><br/>
+                     Build projects from idea to production<br/><br/>
+                    Find community-made components or share your own<br/><br/>
+                    Customize your Playground views<br/><br/>
+                    Connect, manage and monitor your hosting machines<br/><br/>
+                    Configure rate-limiting, security, scaling, CI and eventual advertisement and billing options<br/><br/>
+                    Create and deploy IoT or SaaS production-ready applications from your projects<br/></span>
+
+
+            </div>
+            <div class="home-page-4-img">
+                Start a project
+
+            </div>
+        </div>
+
+    </div>
+    <div  class="dsb-desc">
+
+  </div>
+
+    <div class="dsb-content">
+        <div  class="dsb-grid">
+            <div>   <h3>Projects</h3></div>
+            <div class="dsb-grid-child " dsbGrid>
+                <div>Your projects</div>
+                <div class="dsb-grid-content"><div class="dsb-add">Create a project</div></div>
+            </div>
+        </div>
+        <div  class="dsb-grid">
+            <div>  <h3>Available Microservices</h3></div>
+            <div class="dsb-grid-child " dsbGrid>
+                <div>Your selected microservices</div>
+                <div class="dsb-grid-content"><div class="dsb-add">Add</div></div>
+            </div>
+            <div class="dsb-grid-child " dsbGrid>
+                <div>Declared Microservices</div>
+                <div class="dsb-grid-content" (click)="$event.preventDefault();$event.stopPropagation()">
+                    <button class="dsb-add" [hidden]="this.formToggled === 'declare-ms'" (click)="toggleMsForm('declare-ms')">Declare a new MS</button>
+                    <div class="dasb-declare-ms-form" [hidden]="this.formToggled != 'declare-ms'">
+                                <!-- JSON FORM TEMPLATE -->
+                              <pre class="json dsb-json" spellcheck="false"><code>{{'
+                      {
+                        <span class="hljs-attr">public displayed base path</span>: <input class="hjl-dsb-string" value="/myMs/**">,
+                        <span class="hljs-attr">secured base path</span>: <input class="hjl-dsb-string" value="/ms/**">,
+                        <span class="hljs-attr">serviceId</span>: <input class="hjl-dsb-string" value="ms">,
+                        <span class="hljs-attr">serviceInstances</span>: [
+                          {
+                            <span class="hljs-attr">host</span>: <input class="hjl-dsb-string" value="192.168.0.95">,
+                            <span class="hljs-attr">port</span>: <input class="hjl-dsb-number" value="9999">,
+                            <span class="hljs-attr">uri</span>: <input class="hjl-dsb-string" value="http://host:port/">,
+                            <span class="hljs-attr">instanceInfo</span>: {
+                                  <span class="hljs-attr">instanceId</span>: <input class="hjl-dsb-string" value="ms:019b504251054c5e1fb0052399e2d79a">,
+                                  <span class="hljs-attr">app</span>: <input class="hjl-dsb-string" value="MS1">,
+                                  <span class="hljs-attr">appGroupName</span>: <input class="hjl-dsb-string" value="null">,
+                                  <span class="hljs-attr">homePageUrl</span>: <input class="hjl-dsb-string" value="http://host:port/">,
+                                  <span class="hljs-attr">statusPageUrl</span>: <input class="hjl-dsb-string" value="http://host:port/management/info">,
+                                  <span class="hljs-attr">healthCheckUrl</span>: <input class="hjl-dsb-string" value="http://host:port/management/health">,
+                                  <span class="hljs-attr">countryId</span>: <input class="hjl-dsb-number" value="1">,
+                                  <span class="hljs-attr">dataCenterInfo</span>: {
+                                     <span class="hljs-attr">provider</span>: <input class="hjl-dsb-literal" value="GKE">
+                              },
+
+                            },
+                            <span class="hljs-attr">secure</span>: <input class="hjl-dsb-literal" value="false">,
+                            <span class="hljs-attr">private</span>: <input class="hjl-dsb-literal" value="false">,
+                          }, + ADD NEW +
+                        ],
+                        <span class="hljs-attr">exposedApis</span>: [
+                          {
+                              <span class="hljs-attr">displayed path</span>: <input class="hjl-dsb-string" value="/myAPI/findAll">,
+                              <span class="hljs-attr">secure path</span>: <input class="hjl-dsb-string" value="/some/real/path">,
+                              <span class="hljs-attr">REST type</span>: <input class="hjl-dsb-string" value="GET">,
+                              <span class="hljs-attr">description</span>: <input class="hjl-dsb-string" value="Find them all !">,
+                              <span class="hljs-attr">input</span>: <input class="hjl-dsb-string" value="string">,
+                              <span class="hljs-attr">input description</span>: <input class="hjl-dsb-string" value="any word">,
+                              <span class="hljs-attr">output</span>: <input class="hjl-dsb-string" value="string">,
+                              <span class="hljs-attr">output description</span>: <input class="hjl-dsb-string" value="formatted ISO-2947">,
+
+                           }, + ADD NEW +
+                         ],
+
+                      }
+                    '}}</code></pre>
+                        <button class="dsb-add" (click)="toggleMsForm('');">Save and add !</button>
+                        <button class="dsb-add" (click)="toggleMsForm('');">Close</button>
+                    </div>
+
+
+
+
+
+
+
+
+
+                    <div class="dsb-ms-list"></div>
+                </div>
+
+            </div>
+            <div class="dsb-grid-child " dsbGrid>
+                <div>Registered Microservices</div>
+                <div class="dsb-grid-content"><div class="dsb-info">How to register</div></div>
+            </div>
+            <div class="dsb-grid-child " dsbGrid>
+                <div>Repository Microservices</div>
+                <div class="dsb-grid-content"><div class="dsb-add">Go to Repository</div></div>
+
+        </div>
+            <div class="dsb-grid-child " dsbGrid>
+                <div>Public APIs</div>
+
+                <div class="dsb-grid-content" (click)="$event.stopPropagation()">
+                    <button class="dsb-add" [hidden]="this.formToggled === 'declare-public-api'" (click)="toggleMsForm('declare-public-api')">Declare a new API</button>
+
+                    <form [formGroup]="publicApiForm" novalidate (ngSubmit)="saveApiForm(publicApiForm)" class="dsb-declare-api-form" [hidden]="this.formToggled != 'declare-public-api'">
+
+                        <div class="dsb-api-param"><span>API name : </span><input name="name" value="" formControlName="name"></div>
+                        <div class="dsb-api-param"><span>description : </span><input name="desc" value=""></div>
+                        <div class="dsb-api-param"><span>base URL : </span><input name="url" value=""></div>
+                        <div class="dsb-api-param"><span>REST type : </span><input name="rest" value=""></div>
+
+                        <div><span class="dsb-api-title">Input:</span>
+                            <div class="dsb-api-param"><span>type : </span><input name="inputType" value=""></div>
+                            <div class="dsb-api-param"><span>description : </span><input name="inputDesc" value=""></div>
+                        </div>
+
+                        <div><span class="dsb-api-title">Output:</span>
+                            <div class="dsb-api-param"><span>type : </span><input value=""></div>
+                            <div class="dsb-api-param"><span>description : </span><input value=""></div>
+                        </div>
+
+                        <div><span class="dsb-api-title">Parameters :</span>
+                            <div class="dsb-api-param"><button (click)="addApiParam()">Add a parameter</button></div>
+                            <div formArrayName="_params">
+                            <div *ngFor="let param of publicApiForm.controls._params.controls; let i=index; " class="dsb-api-param-cont">
+                                <span (click)="removeApiParam(i)" class="dsb-remove-param">
+                                       x
+                                </span>
+                                <div [formGroupName]="i">
+
+                                <div class="dsb-api-param"><span>Name : </span><input formControlName="name" value=""></div>
+                                <div class="dsb-api-param"><span>Default value : </span><input formControlName="_default" value=""></div>
+                                <div class="dsb-api-param"><span>Mandatory : </span><input formControlName="_mandatory" type="checkbox" value="true" checked="checked"></div>
+                                <div class="dsb-api-param"><span>Editable : </span><input formControlName="_editable" type="checkbox" value="true" checked="checked"></div>
+                                <div class="dsb-api-param"><span>Description : </span><input formControlName="desc" value=""></div>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                        <button class="dsb-add" (click)="toggleMsForm('')">Save and add !</button>
+                        <button class="dsb-add" (click)="toggleMsForm('')">Cancel</button>
+                    </form>
+                </div>
+            </div>
+    </div>
+        <div  class="dsb-grid" >
+            <div>   <h3>Available Operations</h3></div>
+            <div class="dsb-grid-child " dsbGrid>
+                <div>Your selected operations</div>
+
+            </div>
+            <div class="dsb-grid-child " dsbGrid>
+                <div>Saved operations</div>
+
+            </div>
+            <div class="dsb-grid-child " dsbGrid>
+                <div>Repository operations</div>
+
+            </div>
+
+        </div>
+
+
+
+    </div>
+
+</div>
+

@@ -35,7 +35,7 @@ public class PlaygroundService {
     private final String PG_GLOBAL_TEMPLATE_CACHE_NAME = "templates_playground_session";
     private final String PG_GLOBAL_PUBLIC_API_CACHE = "public_api_playground_session";
 
-
+    private final SwaggerParser parser;
 
     /**
      * TODO : -perform requests to microservice holding db through kafka ? or do it through kafka from front (less safe)
@@ -54,6 +54,7 @@ public class PlaygroundService {
         publicApiCache.put(0, new HashSet<PublicApiVM>());
         log.info("Created HazelCast cache for Playground user session");
 
+        parser =  new SwaggerParser();
         //MOCK HERE
     }
 
@@ -129,36 +130,49 @@ public class PlaygroundService {
 
     public List<Swagger> getRegisteredMsList(List<Route> routes, DiscoveryClient discoveryClient) {
 
-        SwaggerParser parser =  new SwaggerParser();
+
         List<Swagger> apis = new ArrayList<>();
+        try {
+            Swagger api = getApiDocs("http://127.0.0.1:8080/v2/api-docs");
+            apis.add(api);
+        } catch(Exception e) {
+            log.error("FAILED TO GET SWAGGER API FROM GTW : exception : "+e+"  --   "+e.getMessage());
+        }
+
         routes.forEach(route-> {
             try {
-                URL url = new URL(discoveryClient.getInstances(route.getLocation()).get(0).getUri() + "/v2/api-docs");
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                con.setRequestMethod("GET");
-
-                BufferedReader in = new BufferedReader(
-                    new InputStreamReader(con.getInputStream()));
-                String output;
-                StringBuffer response = new StringBuffer();
-
-                while ((output = in.readLine()) != null) {
-                    response.append(output);
-                }
-                in.close();
-
-                Swagger api = parser.parse(response.toString());
-                log.info("Retrieved swagger for endpoint : "+api.getHost());
-
+                Swagger api = getApiDocs(discoveryClient.getInstances(route.getLocation()).get(0).getUri() + "/v2/api-docs");
                 apis.add(api);
-
-
             } catch(Exception e) {
                 log.error("FAILED TO GET SWAGGER API FOR URL : "+discoveryClient.getInstances(route.getLocation()).get(0).getUri() +route.getFullPath().replace("**", "v2/api-docs")+" : exception : "+e+"  --   "+e.getMessage());
             }
-
         });
         return apis;
+    }
+
+
+    private Swagger getApiDocs(String urlStr) throws Exception {
+        URL url = new URL(urlStr);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+
+            BufferedReader in = new BufferedReader(
+                new InputStreamReader(con.getInputStream()));
+            String output;
+            StringBuffer response = new StringBuffer();
+
+            while ((output = in.readLine()) != null) {
+                response.append(output);
+            }
+            in.close();
+
+            Swagger api = parser.parse(response.toString());
+            log.info("Retrieved swagger for endpoint : "+api.getHost());
+
+            return api;
+
+
+
     }
 
 }

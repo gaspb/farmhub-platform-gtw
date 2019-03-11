@@ -1,0 +1,61 @@
+<div class="modal-header">
+    <h4 class="modal-title">Sign in</h4>
+    <button aria-label="Close" data-dismiss="modal" class="close" type="button" (click)="activeModal.dismiss('closed')"><span aria-hidden="true">x</span>
+    </button>
+</div>
+<div class="modal-body">
+
+
+
+    <div class="row justify-content-center">
+        <div class="col-md-8 signin-radio">
+            <div>Sign-in with :</div>
+            <div style="margin-top: 10px;margin-left: 10%;"><input id="signin-cred" type="radio" name="sign-in-choice" value="cred" title="credentials" checked="checked" (click)="radioToken = false;this.checked='checked'" style="cursor:pointer"/> <label for="signin-cred">credentials</label></div>
+            <div style="margin-left: 10%;"><input id="signin-tok"  type="radio" name="sign-in-choice" value="tok" title="token" (click)="radioToken = true;this.checked='checked'" style="cursor:pointer"/> <label for="signin-cred">token</label></div>
+            <br/>
+        </div>
+        <div class="col-md-8">
+            <div class="alert alert-danger" *ngIf="authenticationError">
+                <strong>Failed to sign in!</strong> Please check your credentials and try again.
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="signin-cred-cont" *ngIf="!radioToken">
+                <form class="form" role="form" (ngSubmit)="login()">
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="username" id="username" placeholder="Your username"
+                               [(ngModel)]="username">
+                    </div>
+                    <div class="form-group">
+                        <input type="password" class="form-control" name="password" id="password" placeholder="Your password"
+                               [(ngModel)]="password">
+                    </div>
+                    <div class="form-check">
+                        <label class="form-check-label" for="rememberMe">
+                            <input class="form-check-input" type="checkbox" name="rememberMe" id="rememberMe" [(ngModel)]="rememberMe" checked>
+                            <span>Remember me</span>
+                        </label>
+                    </div>
+                    <button type="{{this.allowLogin ? 'submit' : 'button'}}" class="btn btn-primary">Sign in</button>
+                    <button type="button" (click)="register()" class="btn btn-primary" disabled="" title="Registration is closed while the Lab is in Alpha" style="cursor:not-allowed">Register</button>
+                </form>
+                <p></p>
+                <div class="">
+                    <a class="" (click)="requestResetPassword()">Password lost ?</a>
+                </div>
+            </div>
+            <div class="signin-token-cont" *ngIf="radioToken">
+                <div class="form-group">
+                    <input type="text" class="form-control" name="token" id="sig-token" placeholder="Token key">
+                </div>
+                <button type="button" class="btn btn-primary">Sign in</button>
+            </div>
+            <div class="">
+                <br/>
+                Registration is closed<br/><br/>
+                <a style="font-size: smaller;">Apply for a one-day demo token</a><br/>
+                <a style="font-size: smaller;">Keep me informed of new releases</a><br/><br/>
+            </div>
+        </div>
+    </div>
+</div>

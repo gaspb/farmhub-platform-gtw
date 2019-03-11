@@ -14,6 +14,7 @@ public class WebsocketSecurityConfiguration extends AbstractSecurityWebSocketMes
         messages
             .nullDestMatcher().permitAll()
             .simpDestMatchers("/topic/tracker").hasAuthority(AuthoritiesConstants.ADMIN)
+            .simpDestMatchers("/topic/notif").authenticated()
             .simpDestMatchers("/topic/message").permitAll()
             .simpDestMatchers("/topic/message/**").permitAll()
             .simpDestMatchers("/ws1reciever").permitAll()
@@ -22,7 +23,9 @@ public class WebsocketSecurityConfiguration extends AbstractSecurityWebSocketMes
             .simpDestMatchers("/topic/scala-ms-receiver/**").permitAll()
             .simpDestMatchers("/scala-ms-subscribe").permitAll() //TODO
             .simpDestMatchers("/scalams").permitAll() //TODO
-
+            .simpDestMatchers("/user").permitAll() //TODO
+            .simpDestMatchers("/user/**").permitAll()
+            .simpDestMatchers("/queue/**").permitAll()
             // matches any destination that starts with /topic/
             // (i.e. cannot send messages directly to /topic/)
             // (i.e. cannot subscribe to /topic/messages/* to get messages sent to

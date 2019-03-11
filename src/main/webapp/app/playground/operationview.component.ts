@@ -6,6 +6,9 @@ import { Observable } from 'rxjs/Observable';
 import { OperationLogicService } from './operation-logic.service';
 import { downloadAsFile } from '../shared/util/file-util';
 import { Subscription } from 'rxjs/Rx';
+import { Chart } from 'chart.js';
+import { isNullOrUndefined } from 'util';
+import { DashboardService } from '../dashboard/dashboard.service';
 
 @Component({
     selector: 'operation-view',
@@ -13,7 +16,7 @@ import { Subscription } from 'rxjs/Rx';
               <div [ngClass]="{'testMode': testMode}" class="drop-container"><div id="op-bin-{{instanceId}}" *ngIf="(isDraggedOver && draggedItem==null)"  ><i class="fa fa-trash op-trash" aria-hidden="true" (dragover)="dragOver('trash')" (dragleave)="isTrashDraggedOver=false"></i></div>
                   <div  class="top-container" [ngClass]="isTrashActive ? 'trash-active' : ''">
                           <span class="topMenu"><span [ngClass]="saveBtn==='Save' ? 'save' : ('saved'+ (isOp?'-op':'-tp'))" (click)="save()">{{saveBtn}}</span><span class="new" (click)="empty()">New</span><span class="load" (click)="load()">Load</span><span [ngClass]="{'test' : testMode} " class="try" (click)="isOp ? runOpLogic() : testTemplate()">{{isOp ? 'Run' : testMode ? 'TEST MODE' : 'Test'}}</span><span (click)="downloadJSON()"><fa-icon [icon]="'download'"></fa-icon></span>
-                              </span><span class="op-trash-right trash" *ngIf="isOp" (click)="isTrashActive = !isTrashActive"><fa-icon [icon]="'trash-alt'"></fa-icon></span>
+                              </span><span class="op-trash-right trash" (click)="isTrashActive = !isTrashActive"><fa-icon [icon]="'trash-alt'"></fa-icon></span>
                       <div class="op-desc-cont"><h3 contenteditable="true" spellcheck="false" class="pg-title" (blur)="cpName = $event.srcElement.textContent; saveBtn = 'Save'">{{cpName}}</h3>
                       <!--<div class="op-desc-value" draggable="false">Desc : <textarea class="op-desc" spellcheck="false"></textarea></div>--></div>
                   </div>
@@ -38,6 +41,7 @@ export class OperationComponent implements OnDestroy {
     opId = 1;
     saveBtn = 'Save';
     testMode = false;
+    charts = {};
     static instances = {};
     static uniqueId = 0;
     static componentIndex;
@@ -71,7 +75,8 @@ export class OperationComponent implements OnDestroy {
         private elRef: ElementRef,
         private optpService: OpTemplateService,
         private pgService: PlaygroundService,
-        private opLogicService: OperationLogicService
+        private opLogicService: OperationLogicService,
+        private dashboardService: DashboardService
     ) {
         if (OperationComponent.componentIndex === undefined) {
             OperationComponent.componentIndex = 0;
@@ -215,19 +220,35 @@ export class OperationComponent implements OnDestroy {
         });*/
     }
 
+    public parseOrEmpty(any) {
+        if (!any || any.toString().trim().length === 0) {
+            return {};
+        }
+        let result = null;
+        try {
+            result = JSON.parse(any.replace(/(['"])?([a-z0-9A-Z_]+)(['"])?:/g, '"$2": ').replace(/(')/g, '"'));
+        } catch (e) {
+            result = {};
+        }
+        return result;
+    }
+
     listenedTemplateElems = [];
     public async testTemplate() {
         if (this.testMode) {
             this.testMode = false;
             await this.listenedTemplateElems.map(elem => elem[0].removeEventListener('click', elem[1]));
             this.listenedTemplateElems = [];
+            this.opLogicService.unsubscribeAll();
             return;
         }
         this.testMode = true;
         //TODO filter out unconnected elems or duplicates
 
         const inputs = ['tp-button', 'tp-text'];
-        const outputs = ['tp-datatable-out', 'tp-text-out', 'tp-log-out'];
+        const outputs = this.dashboardService.currentDTO
+            ? this.dashboardService.currentDTO.components.templateComponents.map(s => s.id)
+            : this.pgService.getMockTemplateOutputs().map(s => s.id);
         //get all Ids
         const logic = this.getLogic();
         let operations = {};
@@ -253,13 +274,96 @@ export class OperationComponent implements OnDestroy {
         Object.keys(operations).map(op => {
             const input = operations[op]['IN'];
             const output = operations[op]['OUT'];
-            console.log('D2', op, input, input.id, document.getElementById(input.id));
+            console.log('D2', op, output, input, operations);
+            let hasInit = false;
             function _tpButtonClickHandler() {
                 let inputVal = input.body;
                 let obs = self.opLogicService.asObservable(self.opLogicService.execute('operation', inputVal, { operationName: op }));
+                if (!output) {
+                    obs.subscribe(data => {
+                        console.log("No output connected to input, result can't be displayed", data);
+                    });
+                    return true;
+                }
+                let div = document.getElementById(output.id);
+
+                if (self.charts) {
+                    console.log('destroying chart');
+                    if (self.charts[output.id]) {
+                        self.charts[output.id].destroy();
+                        self.charts[output.id] = null;
+                        div.getElementsByClassName('tp-output')[0].innerHTML = '';
+                    }
+                }
+                let offsetMillis = performance.now();
+                //TODO INIT
+                if (!div.getAttribute('data-hjl-outtype') && !hasInit) {
+                    console.log('INIT', output);
+
+                    let outId = output.id.substring(5, output.id.lastIndexOf('-'));
+                    let outputDiv = (self.dashboardService.currentDTO
+                        ? self.dashboardService.currentDTO.components.templateComponents
+                        : self.pgService.getMockTemplateOutputs()
+                    ).filter(s => s['id'] == outId)[0];
+                    let deps = outputDiv.dependencies.split(',');
+                    console.log('downloading dependencies', deps);
+                    let pgContainer = document.getElementsByClassName('pg-container')[0];
+                    if (deps.length > 0) {
+                        deps.forEach(dep => {
+                            let str: string = '[data-loaded-dep="' + dep.trim() + '"]';
+                            if (pgContainer.querySelector(str)) {
+                                console.log('dependency already loaded ', dep);
+                            } else {
+                                try {
+                                    console.log('dep:', dep);
+                                    let req = new XMLHttpRequest();
+                                    req.open('get', dep, false);
+                                    req.send();
+
+                                    let c = req.response;
+                                    let script = document.createElement('script');
+                                    script.innerHTML = c;
+                                    script.setAttribute('data-loaded-dep', dep);
+                                    pgContainer.appendChild(script);
+                                    console.log('dep loaded', dep, str);
+                                } catch (e) {
+                                    console.log('Error evaluating dependency : ', e);
+                                }
+                            }
+                        });
+                    }
+
+                    try {
+                        console.log('running initjs', '(body)=>{' + outputDiv['initjs'] + '}');
+
+                        let func = eval('(body)=>{' + outputDiv['initjs'] + '}');
+                        func(output.body);
+                    } catch (e) {
+                        console.log('Error evaluating init func : ', e);
+                    }
+                    hasInit = true;
+                }
+                //TODO ONDESTROY
                 let subscriber = obs.subscribe(data => {
                     console.log('=====_____DATA--', data);
-                    let div = document.getElementById(output.id);
+                    //TODO UPDATE
+                    if (!div.getAttribute('data-hjl-outtype')) {
+                        console.log('UPDATE', data, output);
+                        let outId = output.id.substring(5, output.id.lastIndexOf('-'));
+                        let outputDiv = (self.dashboardService.currentDTO
+                            ? self.dashboardService.currentDTO.components.templateComponents
+                            : self.pgService.getMockTemplateOutputs()
+                        ).filter(s => s['id'] == outId)[0];
+
+                        try {
+                            console.log('Evaluating update func : ', ['(data, body)=>{' + outputDiv['updatejs'] + '}']);
+                            let func = eval('(data, body)=>{' + outputDiv['updatejs'] + '}');
+                            func(data, output.body);
+                        } catch (e) {
+                            console.log('Error evaluating update func : ', e);
+                        }
+                        return;
+                    }
                     switch (div.getAttribute('data-hjl-outtype')) {
                         case 'text':
                             div.getElementsByClassName('tp-output-value')[0].textContent = data;
@@ -270,6 +374,123 @@ export class OperationComponent implements OnDestroy {
                         case 'datatable':
                             break;
                         case 'graph':
+                            if (!self.charts) {
+                                self.charts = {};
+                            }
+                            console.log('Chart Options --before: ' + output.id, logic['tp-graph-out'][output.id]);
+                            if (!self.charts[output.id]) {
+                                const canvas = document.createElement('canvas');
+                                const container = div.getElementsByClassName('tp-output')[0].appendChild(canvas);
+                                const ctx = canvas.getContext('2d');
+                                let body = logic['tp-graph-out'][output.id].body || logic['tp-graph-out'][output.id]._value;
+                                console.log('Body', body);
+                                let dataSets = body.datasets.map(ds => self.parseOrEmpty(ds));
+                                console.log('BodyJSON', dataSets);
+                                let dsLength = dataSets ? dataSets.length : 0;
+                                let labelsAndDatasets: { datasets; labels } = self.getLabelsAndDatasets(data, body.graphType);
+                                let tempDatasets = [];
+                                for (let i = 0; i < labelsAndDatasets.datasets.length; i++) {
+                                    let recievedDataset = labelsAndDatasets.datasets[i];
+                                    let userDataset = dsLength >= i ? dataSets[i] : null;
+                                    console.log('userDataset', userDataset);
+                                    if (recievedDataset.label) {
+                                        if (recievedDataset.label != userDataset.label) {
+                                            console.log(
+                                                'Warning - recieved dataset label is ' +
+                                                    recievedDataset.label +
+                                                    ' while configured label is ' +
+                                                    userDataset.label
+                                            );
+                                        } else {
+                                            userDataset.label = recievedDataset.label;
+                                        }
+                                    }
+                                    userDataset.data = recievedDataset.data;
+                                    labelsAndDatasets.datasets[i] = userDataset;
+                                }
+                                if (!labelsAndDatasets.labels) {
+                                    if (body.labels) {
+                                        labelsAndDatasets.labels = body.labels;
+                                    } else {
+                                        labelsAndDatasets.labels = [];
+                                    }
+                                }
+
+                                console.log('Datasets', labelsAndDatasets, labelsAndDatasets.datasets[0]);
+                                let chartOptions = {
+                                    type: body.graphType,
+                                    data: {
+                                        labels: labelsAndDatasets.labels,
+                                        datasets: labelsAndDatasets.datasets
+                                    },
+                                    options: self.parseOrEmpty(body.options)
+                                };
+
+                                console.log('Chart Options : ', chartOptions);
+                                self.charts[output.id] = new Chart(ctx, chartOptions);
+                            } else {
+                                console.log('Chart already exists', self.charts[output.id], self.charts[output.id].data);
+                                //TODO update labels number if necessary
+                                if (!self.charts[output.id].data.datasets[0].data || !self.charts[output.id].data.datasets[0].data.push) {
+                                    self.charts[output.id].data.datasets[0].data = [];
+                                }
+
+                                let labelsAndDatasets = self.getLabelsAndDatasets(data, self.charts[output.id].config.type);
+
+                                //either add new values tu the dataset
+                                if (self.charts[output.id].config.type === 'scatter' || self.charts[output.id].config.type === 'line') {
+                                    console.log('Chart is scatter or line, adding data');
+                                    if (labelsAndDatasets.labels) {
+                                        self.charts[output.id].data.labels.push(labelsAndDatasets.labels);
+                                    }
+                                    //self.charts[output.id].data.push(data);//==add new datasets
+                                    //==update existing datasets or add new
+                                    const oldDataLength = self.charts[output.id].data.datasets.length;
+                                    for (let x = 0; x < labelsAndDatasets.datasets.length; x++) {
+                                        if (oldDataLength >= x) {
+                                            for (let y = 0; y < labelsAndDatasets.datasets[x].data.length; y++) {
+                                                self.charts[output.id].data.datasets[x].data.push(labelsAndDatasets.datasets[x].data[x]);
+                                            }
+                                        } else {
+                                            self.charts[output.id].data.datasets.push(labelsAndDatasets.datasets[x]);
+                                        }
+                                    }
+                                    /*
+                                    if(Array.isArray(data.data)) {
+                                        data.forEach(s=>self.charts[output.id].data.datasets[0].data.push(s));
+                                        self.charts[output.id].data.labels.push(dataOffset++)
+                                    } else {
+                                        self.charts[output.id].data.datasets.push(data);
+                                    }*/
+                                } else {
+                                    // or update values TODO update some
+                                    console.log('Setting new data to the chart', labelsAndDatasets.datasets);
+
+                                    if (performance.now() - offsetMillis < 400) {
+                                        console.log('SLOW DOWN BUDDY');
+                                        return;
+                                    }
+                                    offsetMillis = performance.now();
+                                    if (labelsAndDatasets.labels) {
+                                        self.charts[output.id].data.labels = labelsAndDatasets.labels;
+                                    }
+                                    if (labelsAndDatasets.datasets && labelsAndDatasets.datasets.length > 0) {
+                                        const oldDatasetsLgth = self.charts[output.id].data.datasets.length;
+                                        for (let x = 0; x < labelsAndDatasets.datasets.length; x++) {
+                                            if (oldDatasetsLgth >= x) {
+                                                console.log('updating data', self.charts[output.id].data.datasets[x].data);
+                                                self.charts[output.id].data.datasets[x].data = labelsAndDatasets.datasets[x].data;
+                                            } else {
+                                                console.log('is new dataset');
+                                                self.charts[output.id].data.datasets[x] = labelsAndDatasets.datasets[x];
+                                            }
+                                        }
+                                    }
+                                }
+
+                                self.charts[output.id].update();
+                            }
+                            console.log('CHARTS', self.charts);
                             break;
                     }
 
@@ -278,9 +499,13 @@ export class OperationComponent implements OnDestroy {
             }
 
             //temp => TODO try not tu use document.getElementById but create actual divs in another layer and attach drectly events to them (so they are destroyed on test end)
-            const elem = document.getElementById(input.id);
-            elem.addEventListener('click', _tpButtonClickHandler);
-            this.listenedTemplateElems.push([elem, _tpButtonClickHandler]);
+            if (!input) {
+                console.log('error testing - no input defined');
+            } else {
+                const elem = document.getElementById(input.id);
+                elem.addEventListener('click', _tpButtonClickHandler);
+                this.listenedTemplateElems.push([elem, _tpButtonClickHandler]);
+            }
         });
     }
 
@@ -331,7 +556,7 @@ export class OperationComponent implements OnDestroy {
             div.style.top = -opcontent.offsetTop * 5 + event.clientY + 'px';
 
             let idToCheck = div.children[0].id;
-            let links = this.retrieveLogic('link');
+            let links = this.retrieveLogic('link') || {};
             console.log('LINKS ', links);
             let linksAsInput = links[idToCheck] || [];
             this.resetLinks();
@@ -396,52 +621,126 @@ export class OperationComponent implements OnDestroy {
 
             if (events && events.length > 0) {
                 const self = this;
-                events.forEach(function(e) {
-                    switch (e) {
-                        //OPERATION VIEW
-                        case 'op-input-pa':
-                            div.addEventListener('input', function(e) {
-                                console.log('input : ', e);
-                                //SAVELOGIC TODO
-                                //API
-                                let key = e.srcElement.parentElement.getAttribute('data-hjl-key');
-                                let id = e.srcElement.parentElement.parentElement.id;
-                                if (!self.getLogic()['publicApi'][id]['_params']) {
-                                    self.getLogic()['publicApi'][id]['_params'] = {};
-                                }
-                                self.getLogic()['publicApi'][id]['_params'][key] = e.srcElement.value;
-                            });
-                            break;
-                        case 'op-input-json':
-                            div.querySelector('.tp-JSON-cont').addEventListener('input', function(e) {
-                                console.log('input : ', e);
-                                let id = div.querySelector('.op-tp').id;
-                                self.getLogic()['json-input'][id]['content'] = e.srcElement.value;
-                            });
-                            break;
-                        case 'op-input-javascript':
-                            div.querySelector('.op-javascript-cont').addEventListener('input', function(e) {
-                                console.log('input : ', e);
-                                let id = div.querySelector('.op-tp').id;
-                                self.getLogic()['javascript'][id]['content'] = e.srcElement.value;
-                            });
-                            break;
 
-                        //TEMPLATE VIEW
-                        case 'tp-input':
-                            div.addEventListener('input', function(e) {
-                                console.log('input : ', e);
-                                //SAVELOGIC TODO
-                                //BUTTON
-                                let id = DragNDropDirective.closest(e.srcElement, ['op-tp'], 6).id;
-                                self.getLogic()['tp-button'][id]['_value'] = e.srcElement.value;
-                            });
-                            break;
-                        case 'fa-click':
-                            //  div.querySelector('fa-icon').addEventListener('click', function(ev){ev.stopPropagation()});
-                            break;
-                    }
-                });
+                if (events[0].constructor.name === 'Object') {
+                    console.log('CUSTOM OUTPUT', div, events);
+                    let optpdiv = div.querySelector('.op-tp');
+                    //END MOCK
+                    events.forEach((ev: { type; target; bound; callback? }) => {
+                        div.querySelector(ev.target).addEventListener(ev.type, function($event) {
+                            if (ev.bound) {
+                                if (!self.getLogic()[optpdiv.getAttribute('data-tp-type')]) {
+                                    self.getLogic()[optpdiv.getAttribute('data-tp-type')] = {};
+                                }
+                                if (!self.getLogic()[optpdiv.getAttribute('data-tp-type')][optpdiv.id]) {
+                                    self.getLogic()[optpdiv.getAttribute('data-tp-type')][optpdiv.id] = {};
+                                }
+                                if (!self.getLogic()[optpdiv.getAttribute('data-tp-type')][optpdiv.id]['_value']) {
+                                    self.getLogic()[optpdiv.getAttribute('data-tp-type')][optpdiv.id]['_value'] = {};
+                                }
+                                self.getLogic()[optpdiv.getAttribute('data-tp-type')][optpdiv.id]['_value'][ev.bound] = $event.srcElement
+                                    .value
+                                    ? $event.srcElement.value
+                                    : $event.srcElement.textContent.trim();
+                            }
+
+                            if (ev.callback) {
+                                eval(ev.callback); //TODO !!!
+                            }
+                        });
+                    });
+                } else {
+                    //START MOCK
+                    events.forEach(function(e) {
+                        switch (e) {
+                            //OPERATION VIEW
+                            case 'op-input-pa':
+                                div.addEventListener('input', function(e) {
+                                    console.log('input : ', e);
+                                    //SAVELOGIC TODO
+                                    //API
+                                    let key = e.srcElement.parentElement.getAttribute('data-hjl-key');
+                                    let id = e.srcElement.parentElement.parentElement.id;
+                                    if (!self.getLogic()['publicApi'][id]['_params']) {
+                                        self.getLogic()['publicApi'][id]['_params'] = {};
+                                    }
+                                    self.getLogic()['publicApi'][id]['_params'][key] = e.srcElement.value;
+                                });
+                                break;
+                            case 'op-input-json':
+                                div.querySelector('.tp-JSON-cont').addEventListener('input', function(e) {
+                                    console.log('input : ', e);
+                                    let id = div.querySelector('.op-tp').id;
+                                    self.getLogic()['json-input'][id]['content'] = e.srcElement.value;
+                                });
+                                break;
+                            case 'op-input-javascript':
+                                div.querySelector('.op-javascript-cont').addEventListener('input', function(e) {
+                                    console.log('input : ', e);
+                                    let id = div.querySelector('.op-tp').id;
+                                    self.getLogic()['javascript'][id]['content'] = e.srcElement.value;
+                                });
+                                break;
+
+                            //TEMPLATE VIEW
+                            case 'tp-input':
+                                div.addEventListener('input', function(e) {
+                                    console.log('input : ', e);
+                                    //SAVELOGIC TODO
+                                    //BUTTON
+                                    let id = DragNDropDirective.closest(e.srcElement, ['op-tp'], 6).id;
+                                    self.getLogic()['tp-button'][id]['_value'] = e.srcElement.value;
+                                });
+                                break;
+                            case 'fa-click':
+                                //  div.querySelector('fa-icon').addEventListener('click', function(ev){ev.stopPropagation()});
+                                break;
+                            case 'tp-select-graph':
+                                div.getElementsByClassName('graph-options')[0].addEventListener('input', function(e) {
+                                    let id = DragNDropDirective.closest(e.srcElement, ['op-tp'], 6).id;
+                                    console.log('opt input : ' + id, e.srcElement.value);
+                                    if (!self.getLogic()['tp-graph-out'][id]['_value']) {
+                                        self.getLogic()['tp-graph-out'][id]['_value'] = {};
+                                    }
+                                    self.getLogic()['tp-graph-out'][id]['_value']['options'] = e.srcElement.value;
+                                });
+                                div.getElementsByClassName('graph-labels')[0].addEventListener('input', function(e) {
+                                    let id = DragNDropDirective.closest(e.srcElement, ['op-tp'], 6).id;
+                                    console.log('input : ' + id, e.srcElement.value);
+                                    if (!self.getLogic()['tp-graph-out'][id]['_value']) {
+                                        self.getLogic()['tp-graph-out'][id]['_value'] = {};
+                                    }
+                                    self.getLogic()['tp-graph-out'][id]['_value']['labels'] = e.srcElement.value.split(',');
+                                });
+                                div.getElementsByClassName('graph-add')[0].addEventListener('click', function(e) {
+                                    let textarea = document.createElement('textarea');
+                                    let id = DragNDropDirective.closest(e.srcElement, ['op-tp'], 6).id;
+                                    if (!self.getLogic()['tp-graph-out'][id]['_value']) {
+                                        self.getLogic()['tp-graph-out'][id]['_value'] = {};
+                                    }
+                                    if (!self.getLogic()['tp-graph-out'][id]['_value']['datasets']) {
+                                        self.getLogic()['tp-graph-out'][id]['_value']['datasets'] = [];
+                                    }
+                                    let idx = self.getLogic()['tp-graph-out'][id]['_value']['datasets'].length;
+                                    self.getLogic()['tp-graph-out'][id]['_value']['datasets'].push('{}');
+                                    textarea.addEventListener('input', function(e) {
+                                        self.getLogic()['tp-graph-out'][id]['_value']['datasets'][idx] = e.srcElement.value;
+                                    });
+                                    div.getElementsByClassName('graph-datasets')[0].appendChild(textarea);
+                                });
+                                div.getElementsByClassName('graph-add')[0].click();
+                                div.getElementsByClassName('tp-select-graph')[0].addEventListener('change', function(e) {
+                                    let id = DragNDropDirective.closest(e.srcElement, ['op-tp'], 6).id;
+                                    console.log('change : ' + id, e.srcElement.value);
+                                    if (!self.getLogic()['tp-graph-out'][id]['_value']) {
+                                        self.getLogic()['tp-graph-out'][id]['_value'] = {};
+                                    }
+                                    self.getLogic()['tp-graph-out'][id]['_value']['graphType'] = e.srcElement.value;
+                                });
+                                break;
+                        }
+                    });
+                }
             }
         }
 
@@ -453,32 +752,47 @@ export class OperationComponent implements OnDestroy {
         if (div == null) {
             return false;
         }
-        //TODO remove link item
-        let id = div.querySelector('.op-tp').id;
-        let type = id.substring(id.indexOf('-') + 1, id.lastIndexOf('-'));
-        let logic = this.getLogic();
-        delete logic[type][id];
-        if (logic['link']) {
-            Object.keys(logic['link'])
-                .filter(key => key == id)
-                .forEach(key => {
-                    logic['link'][key].forEach(link => document.getElementById(link.lineId).remove());
-
-                    delete logic['link'][key];
-                });
-            Object.keys(logic['link']).forEach(key =>
-                logic['link'][key].filter(link => link.target == id).forEach(link => {
-                    document.getElementById(link.lineId).remove();
-                    //remove link from array
-                    if (logic['link'][key].length == 1) {
-                        delete logic['link'][key];
-                    } else {
-                        logic['link'][key].splice(logic['link'][key].indexOf(link), 1);
+        if (!this.isOp) {
+            let id = div.querySelector('.op-tp').id;
+            let logic = this.getLogic();
+            let keys = Object.keys(logic);
+            keys.forEach(key => {
+                if (logic[key][id]) {
+                    delete logic[key][id];
+                    if (Object.keys(logic[key]).length == 0) {
+                        delete logic[key];
                     }
-                })
-            );
+                }
+            });
+            div.remove();
+        } else {
+            //TODO remove link item
+            let id = div.querySelector('.op-tp').id;
+            let type = id.substring(id.indexOf('-') + 1, id.lastIndexOf('-'));
+            let logic = this.getLogic();
+            delete logic[type][id];
+            if (logic['link']) {
+                Object.keys(logic['link'])
+                    .filter(key => key == id)
+                    .forEach(key => {
+                        logic['link'][key].forEach(link => document.getElementById(link.lineId).remove());
+
+                        delete logic['link'][key];
+                    });
+                Object.keys(logic['link']).forEach(key =>
+                    logic['link'][key].filter(link => link.target == id).forEach(link => {
+                        document.getElementById(link.lineId).remove();
+                        //remove link from array
+                        if (logic['link'][key].length == 1) {
+                            delete logic['link'][key];
+                        } else {
+                            logic['link'][key].splice(logic['link'][key].indexOf(link), 1);
+                        }
+                    })
+                );
+            }
+            div.remove();
         }
-        div.remove();
 
         return true;
     }
@@ -542,10 +856,11 @@ export class OperationComponent implements OnDestroy {
                                 ioType: ''
                             });
                             obj.tpItem.classList.remove('tp-connect-active');
-                            this.saveLogic(obj.tpItem.getAttribute('data-tp-type'), obj.tpItem.parentElement.id, {
-                                op: obj.op,
-                                io: obj.tpItem.dataset.io
-                            });
+                            console.log('SAVE LOGIC ');
+                            let tp = this.getLogic[obj.tpItem.getAttribute('data-tp-type')][obj.tpItem.parentElement.id] || {};
+                            tp.op = obj.op;
+                            tp.io = obj.tpItem.dataset.io;
+                            this.getLogic[obj.tpItem.getAttribute('data-tp-type')][obj.tpItem.parentElement.id] = tp;
                         } else {
                             this.saveBtn = 'Save';
                         }
@@ -557,6 +872,7 @@ export class OperationComponent implements OnDestroy {
     ngOnDestroy() {
         this.optpService.resetIdxes();
         this.resetLogic(true);
+        this.opLogicService.unsubscribeAll();
     }
     dragOver(opt) {
         event.preventDefault();
@@ -585,6 +901,138 @@ export class OperationComponent implements OnDestroy {
         for (let _i = 0; _i < opened.length; _i++) {
             opened[_i].classList.remove('open');
         }
+    }
+
+    getLabelsAndDatasets(data, graphType): { datasets; labels } {
+        console.log('getLabelsAndDatasets', data, graphType);
+        let datasets = [];
+        let labels = [];
+        if (!data) return null;
+        /*
+
+        types of data :
+            - linear : [10,6,9,12]
+            - coordinate : [{x:5,y:9},{x:5,y:9}]
+            - named : {stat1:10,stat2:5,stat3:8}
+        types of datasets :
+            - direct (one dataset)
+            - array
+            - named #NOT IMPLEMENTED
+        types of graph :
+            - scatter or line :
+                - linear #INCORRECT : increment a var to use as x axis and map coordinate objects
+                - coordinate : direct
+                - named #INCORRECT: like linear, but name is showed on hoover
+             - bar & else :
+                - linear : direct, no labels
+                - coordinate : #INCORRECT, will be considered as named
+                - named : use keys as labels, values as data
+
+         */
+
+        function isCoordinate(data) {
+            return (
+                data &&
+                data.constructor.name === 'Array' &&
+                data.length > 0 &&
+                !isNullOrUndefined(data[0]['x']) &&
+                !isNullOrUndefined(data[0]['y'])
+            );
+        }
+        function isLinear(data) {
+            if (!data) {
+                console.log('data is null');
+                data = [];
+                return true;
+            }
+            return (
+                data.constructor.name === 'Array' &&
+                (data.length == 0 || (data[0].constructor.name != 'Object' && data[0].constructor.name != 'Array'))
+            );
+        }
+        function isNamed(data) {
+            return data && data.constructor.name === 'Object' && isLinear([data[Object.keys(data)[0]]]);
+        }
+
+        let linear = isLinear(data);
+        let coordinate = isCoordinate(data);
+        let named = isNamed(data);
+        let scatter = graphType === 'scatter';
+        let line = graphType === 'line';
+
+        let isMultipleDatasets = data.constructor.name === 'Array' && !linear && !coordinate && !named;
+        if (isMultipleDatasets && !scatter && !line) {
+            console.info('Error - incorrect graph type ' + graphType + ', multiple datasets are not allowed with this type for now');
+        }
+        let builtdatasets = isMultipleDatasets ? data : [data];
+        let wrappedDatasets = [];
+        if (builtdatasets.constructor.name === 'Object') {
+            wrappedDatasets = Object.keys(builtdatasets).map(key => {
+                return {
+                    label: key,
+                    data: builtdatasets[key]
+                };
+            });
+        } else {
+            wrappedDatasets = builtdatasets.map(ds => {
+                return {
+                    data: ds
+                };
+            });
+        }
+        let idx = 0;
+        for (let dataset of wrappedDatasets) {
+            if (scatter) {
+                if (isCoordinate(dataset.data)) {
+                    //direct
+                } else {
+                    console.info('Error - incorrect graph type ' + graphType + ', data should be coordinates');
+                }
+            } else if (line) {
+                if (isCoordinate(dataset.data)) {
+                    dataset.data.forEach(dt => {
+                        labels.push(dt.x);
+                    });
+                } else if (isLinear(dataset.data)) {
+                    //direct
+                    labels.push('-');
+                    /*dataset.data.forEach(dt=>{
+
+                    })*/
+                } else if (isNamed(dataset.data)) {
+                    let orderedData = [];
+                    Object.keys(dataset.data).map(key => {
+                        labels.push(key);
+                        orderedData.push(dataset.data[key]);
+                    });
+                    dataset.data = orderedData;
+                } else {
+                    console.info('Error 0- Could not identify data type', dataset.data);
+                    dataset.data = [{ data: [] }];
+                }
+            } else {
+                if (isCoordinate(dataset.data)) {
+                    console.info('Error - incorrect graph type ' + graphType + ', data cannot be coordinates');
+                } else if (isLinear(dataset.data)) {
+                    //direct
+                } else if (isNamed(dataset.data)) {
+                    let orderedData = [];
+                    Object.keys(dataset.data).map(key => {
+                        labels.push(key);
+                        orderedData.push(dataset.data[key]);
+                    });
+                    dataset.data = orderedData;
+                } else {
+                    console.info('Error - Could not identify data type', dataset.data);
+                    dataset.data = [{ data: [] }];
+                }
+            }
+        }
+
+        return {
+            datasets: wrappedDatasets.length > 0 ? wrappedDatasets : [{ data: data }],
+            labels: labels.length > 0 ? labels : null
+        };
     }
 }
 

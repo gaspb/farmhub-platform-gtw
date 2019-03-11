@@ -19,7 +19,7 @@
                 <tbody>
                     <tr *ngFor="let entry of currentHealth.details | keys">
                         <td class="text-left">{{entry.key}}</td>
-                        <td class="text-left">{{readableValue(entry.value)}}</td>
+                        <td class="text-left"><pre style="color: #fff;">{{readableValue(entry.value)}}</pre></td>
                     </tr>
                 </tbody>
             </table>

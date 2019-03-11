@@ -10,6 +10,7 @@ export class Principal {
     private userIdentity: any;
     private authenticated = false;
     private authenticationState = new Subject<any>();
+    login;
 
     constructor(private account: AccountService, private trackerService: JhiTrackerService, private ws1MessageService: WsMessageService) {}
 
@@ -70,6 +71,7 @@ export class Principal {
             .then(response => {
                 const account = response.body;
                 if (account) {
+                    this.login = account.login;
                     this.userIdentity = account;
                     this.authenticated = true;
                     this.trackerService.connect();

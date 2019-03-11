@@ -3,6 +3,8 @@ import { PlaygroundService } from '../playground.service';
 import { Branch, Element, EndpointWithTrigger, PipelineVM } from './pipeline.model';
 import { isNullOrUndefined } from 'util';
 import { PipelineItemVM } from './pipeline-item.model';
+import { Observable } from 'rxjs/Rx';
+import { downloadAsFile } from '../../shared/util/file-util';
 
 @Component({
     selector: 'pipeline-view',
@@ -34,6 +36,10 @@ export class PipelineComponent implements OnInit {
     }
     log(...any) {
         console.log('PIPELINE_LOGGER', any);
+    }
+    downloadPipelineJSON(pipeline) {
+        console.log('downloadJSON-ppl', pipeline);
+        downloadAsFile(pipeline, pipeline.pipelineId + '.json', 'application/json');
     }
     addPipeline() {
         this.openForm('endpoint', function(formResultItem) {
@@ -196,10 +202,11 @@ export class PipelineComponent implements OnInit {
                 name: 'Output01'
             };
             let el = new Element();
-            el.name = 'Output01' + Math.random();
+
             el.elementType = 'OUTPUT';
             el.opt = formResultItem.data;
             el.otype = formResultItem.data.type;
+            el.name = el.otype;
             el.outputEndpointURL = btoa(el.opt.outputEndpointURL ? el.opt.outputEndpointURL.replace(' ', '') : el.name.replace(' ', ''));
             out.data = el;
             this.insertPipelineItem(out);
@@ -211,13 +218,26 @@ export class PipelineComponent implements OnInit {
         let idx = 0;
         pipeline.branches[0].elements.forEach(elem => (elem.position = idx++));
         console.log('SAVING PIPELINE', pipeline);
-        this.pgService.savePipeline(pipeline);
+        this.pgService.savePipeline(pipeline); //TODO
+
         this.savePipelineEmitter.emit();
         pipeline.status = 'saved';
     }
-    runPipeline(pipeline: PipelineVM) {
+    deployPipeline(pipeline: PipelineVM) {
         console.log('RUNNING PIPELINE', pipeline);
-
+        pipeline.branches[0].elements.forEach((el: Element, idx: number) => {
+            el.position = idx;
+        });
+        this.pgService.pushPipeline(pipeline).subscribe(
+            data => {
+                console.log('Saved ppl ! ', data);
+                return true;
+            },
+            error => {
+                console.error('Error saving ppl !');
+                return Observable.throw(error);
+            }
+        );
         pipeline.status = 'running';
     }
 

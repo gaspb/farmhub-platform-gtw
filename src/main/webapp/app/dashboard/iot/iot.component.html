@@ -1,0 +1,95 @@
+<div class="dsb-title">SENSORS <fa-icon [icon]="'info-circle'" [fixedWidth]="true" (click)="about = !about"></fa-icon></div>
+
+<div class="dsb-about" *ngIf="about">
+    <span class="dsb-about-close" (click)="about = false">x</span>
+    <b>ABOUT</b><br>
+    <br>
+    A HJL Sensor is only defined by it's acquisition driver and data format.<br>
+    The driver is the code that reads from the hardware GPIO and formats the data.<br>
+    Data format should be documented for a better integration with in-app tools.<br>
+    <br>
+    A HJLSensor can be shared with your team and the community.<br>
+    New drivers can be loaded at runtime, allowing hardware modification without downtime or redeployment<br>
+</div>
+
+
+<div>
+
+    <div *ngIf="!sensors">
+        No configured sensor
+    </div>
+    <div *ngIf="sensors">
+        <ul>
+            <li *ngFor="let sensor of sensors">{{sensor.name}} <span>edit</span><span>x</span></li>
+        </ul>
+    </div>
+
+    <button>Add</button>
+
+    <div>
+
+        <div>
+            Device group :
+        </div>
+
+        <div>
+            IO device :
+        </div>
+        <div>
+            Sensor name :
+        </div>
+        <div>
+            Acquisition driver :
+            <div>
+                Language : Python3 (todo python2, C)
+            </div>
+            <div>
+                Add libraries :
+                <div>
+                    Source code (.zip)
+                    //ex adafruit : https://github.com/adafruit/Adafruit_Python_DHT
+                </div>
+                <div>
+                    installation :
+                    //ex adafruit : sudo python3 setup.py install
+                </div>
+
+            </div>
+            <div>
+                Installation
+            </div>
+            <div>
+                Binary : <input type="file">
+            </div>
+            <div>
+                Source : <input>
+            </div>
+            <div>
+                Description : <textarea></textarea>
+            </div>
+        </div>
+        <div>
+            IO device :
+        </div>
+        <div>
+            Sensor
+            <div>
+                Name :
+            </div>
+            <div>
+                Driver : binary + source + description
+            </div>
+            <div>
+                Add to repository : <input type="checkbox">
+            </div>
+            <div>
+                Sink : kafka
+            </div>
+            <div>
+                Activation : scheduled / onready / on api call
+            </div>
+        </div>
+
+    </div>
+
+</div>

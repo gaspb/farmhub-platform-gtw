@@ -76,3 +76,14 @@ Logo styles
         }
     }
 }
+ul.notification-menu.show {
+    min-width: 350px;
+    min-height: 50px;
+    padding-left: 10px;
+    border-bottom: 1px solid #fff;
+
+    li {
+        border-bottom: 2px solid #daeaea;
+        padding-bottom: 5px;
+    }
+}

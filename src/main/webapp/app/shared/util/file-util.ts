@@ -1,10 +1,11 @@
 export const downloadAsFile = (data: any, filename?: string, mimetype?: string) => {
+    console.log('downloadAsFile', data);
     if (!data) return;
+    let blob = new Blob([JSON.stringify(data, null, 6)], { type: mimetype || 'application/octet-stream' });
 
-    let blob =
-        data.constructor !== Blob
-            ? new Blob([data.constructor.name == 'Object' ? JSON.stringify(data) : data], { type: mimetype || 'application/octet-stream' })
-            : data;
+    /*data.constructor !== Blob
+        ? new Blob([data.constructor.name == 'Object' ? JSON.stringify(data, null, 6) : data], { type: mimetype || 'application/octet-stream' })
+        : data;*/
 
     if (navigator.msSaveBlob) {
         navigator.msSaveBlob(blob, filename);

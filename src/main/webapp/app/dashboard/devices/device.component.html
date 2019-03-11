@@ -1,0 +1,312 @@
+<div class="dsb-title">DEVICES</div>
+
+<div *ngIf="openModal" class="dvc-overlay" (click)="openModal=false"></div>
+
+<div *ngIf="!deviceGroups && !currDeviceGroup">
+    No device group configured.
+</div>
+<div *ngIf="deviceGroups && deviceGroups.length>0">
+    <div *ngFor="let group of deviceGroups">
+        <span>{{group.name}}</span>
+        <span class="jhl-dvc-gr-action">
+            <span (click)="viewJSON(group)">view</span>
+            <span (click)="editJSON(group)">edit</span>
+            <span (click)="removeFromArr(group, deviceGroups)">x</span>
+        </span>
+    </div>
+</div>
+
+<div *ngIf="!currDeviceGroup">
+    <button (click)="newDeviceGroup()">New group</button>
+    <button>Import group</button>
+</div>
+
+<div class="hjl-device-group-cont" *ngIf="currDeviceGroup">
+    <h4><input [(ngModel)]="currDeviceGroup.name" class="hjl-content-editable"></h4>
+
+    <div>
+        Api documentation must follow <a>these rules</a>
+    </div>
+    <!--        MANAGER        -->
+    <div class="hjl-device-manager">
+        <h5>Leadership (TODO: not needed)</h5>
+        <div class="hjl-dvc-entry">
+           <div>Scale :
+                <select  [(ngModel)]="currDeviceGroup.leadership.scale">
+                    <option disabled selected></option>
+                    <option [value]="constants.LEADERSHIP_SCALE_SINGLE_NODE">Single node</option>
+                    <option [value]="constants.LEADERSHIP_SCALE_DISTRIBUTED">Distributed</option>
+                </select>
+            </div>
+        </div>
+    <div *ngIf="currDeviceGroup.leadership.scale == constants.LEADERSHIP_SCALE_SINGLE_NODE">
+            <div class="hjl-dvc-entry">
+                <div>Update policy :
+
+                    <select  [(ngModel)]="currDeviceGroup.updatePolicy">
+                        <option disabled selected></option>
+                        <option [value]="constants.UpdatePolicies.WEB_SYNC">Cloud sync (internet required)</option>
+                        <option [value]="constants.UpdatePolicies.APP_LOCAL">Browser-based sync</option>
+                        <option [value]="constants.UpdatePolicies.WEB_LOCAL">Manual upload</option>
+                    </select>
+                </div>
+
+                <span *ngIf="currDeviceGroup.updatePolicy == constants.UpdatePolicies.WEB_SYNC">
+                    <div>Global IPv4 : <input type="text" value="0.0.0.0" [(ngModel)]="currDeviceGroup.manager.ipv4"></div>
+                    <div>Port : <input type="text" value="8080" [(ngModel)]="currDeviceGroup.manager.port"></div>
+                </span>
+                <div>
+                    Manager node software API :
+                        <select [(ngModel)]="currDeviceGroup.manager.API">
+                            <option disabled>Provided</option>
+                            <option>HJL_Manager_Backend_Swagger_API</option>
+                            <option disabled>Custom</option>
+                            <option value="custom-link">link</option>
+                            <option value="custom-json">json</option>
+                            <option value="custom-GUI">GUI</option>
+                        </select>
+                </div>
+            </div>
+        </div>
+        <div *ngIf=" currDeviceGroup.leadership.scale == constants.LEADERSHIP_SCALE_DISTRIBUTED">
+            distributed not implemented yet //TODO
+        </div>
+    </div>
+
+    <!--       IO         -->
+    <div>
+        <h5>IO</h5>
+        <div><button (click)="addNewIO()">Add</button></div>
+        <div *ngFor="let io of currDeviceGroup.IO" class="hjl-dvc-entry">
+            <span class="before">-</span>
+            <div>Name : <input  [(ngModel)]="io.name"></div>
+            <div>UUID : <input  [(ngModel)]="io.UUID"></div>
+            <div>API definition :
+                <select [(ngModel)]="io.API">
+                    <option disabled>Provided</option>
+                    <option>HJL_IO_Rapberry</option>
+                    <option>HJL_IO_Arduino</option>
+                    <option disabled>Custom</option>
+                    <option value="custom-link">link</option>
+                    <option value="custom-json">json</option>
+                    <option value="custom-GUI">GUI</option>
+                </select>
+            </div> <span class="delete" (click)="removeFromArr(io,currDeviceGroup.IO)">x</span>
+        </div>
+
+    </div>
+
+    <!--       CPU / GPU         -->
+    <div>
+        <h5>Processing</h5>
+        <div><button (click)="addNewProcessing()">Add</button></div>
+        <div *ngFor="let proc of currDeviceGroup.processing" class="hjl-dvc-entry">
+            <span class="before">-</span>
+            <div>Name : <input [(ngModel)]="proc.name"> </div>
+            <div>UUID : <input  [(ngModel)]="proc.UUID"></div>
+            <div>API definition :
+                <select [(ngModel)]="proc.API">
+                    <option>HJL_Processing_AkkaStream</option>
+                    <option disabled>HJL_Processing_SparkCassandra</option>
+                    <option>Import custom API definition</option>
+                </select>
+            </div> <span class="delete"  (click)="removeFromArr(proc,currDeviceGroup.processing)">x</span>
+        </div>
+
+    </div>
+    <!--        REPOSITORY        -->
+    <div>
+        <h5>Repository</h5>
+        <div class="hjl-dvc-entry">
+            <div>Name  <input [(ngModel)]="currDeviceGroup.repository.name"></div>
+            <div>UUID : <input  [(ngModel)]="currDeviceGroup.repository.UUID"></div>
+            <div>API definition  <input [(ngModel)]="currDeviceGroup.repository.API"></div>
+        </div>
+
+    </div>
+
+
+    <div>
+        <button (click)="addCurrToDeviceGroups()">Save</button>
+        <button (click)="currDeviceGroup = null">Cancel</button>
+    </div>
+</div>
+
+
+
+<div class="pl-form-container" *ngIf="openModal">
+    <div class="dvc-form">
+        <div *ngIf="!modalEditable">
+            <div style="white-space: pre; font-size:smaller">
+                {{modalContent}}
+            </div>
+        </div>
+        <div *ngIf="modalEditable">
+            <textarea spellcheck="false" style="white-space: pre; font-size:smaller" class="hjl-content-editable hjl-max-textarea" [(ngModel)]="modalContent">
+
+            </textarea>
+            <button (click)="saveModalContent()">Save</button>
+        </div>
+
+
+    </div>
+</div>
+
+
+<div style="display:none">
+<div class="hjl-device-group-cont" >
+    Demo Device Group 01 - IO
+v
+    Leadership :
+        - distributed (TODO)
+        -> single node
+
+
+    Pre-made HJL libraries and apps have their API definition available at github.
+    If using a custom library, please import or provide a link to the relevant JSON swagger API (as endpoint discovery is not a solution)
+    to allow in-lab use of the endpoints.
+
+
+    Manager :
+        myManagerNode - HJLBackendManager => no front-end, need an external front-end (such as an android app)
+                      - HJLCompleteManager => above + front-end
+                        if web-sync : input global ip
+
+    IO Workers (sensors and motors) :
+        myNamedSensorDevice OR some.local.I.P - HJLRaspberryWorkerLib
+        myNamedMotorDevice OR some.local.I.P - HJLRaspberryWorkerLib
+        myNamedMixedWorkerDevice OR some.local.I.P - CustomLib => import swagger API definition
+
+    Analysts (CPU and GPU) :
+        myCPUWithScalaAnalyst - HJLScalaAkkaStreamLib
+        myCPUWithSparkAnalyst - HJLSparkCassandraLib
+
+    Repository (keep track of all libs added, allowing restoration/prevision from manager node)
+        myMultiLanguageRepository - HJLStandardRepoApp
+
+    Exposed node <input type="checkbox" name="leader">
+</div>
+
+
+
+<div>Not configured</div>
+
+<div>New device group</div>
+
+<div>
+    <h3>Device group Agri01</h3>
+    <div>
+        <h4>Manager device</h4>
+        <p>Description : resolves DNS, handle registry and load balancing, send commands to other services, create hosted network, webserver for template components</p>
+        <div>
+            MyPi3B+[01] - not exposed (update via webserver)
+        </div>
+
+        => pi3b+, for now native, in the end docker ?
+        => all python ?
+        =>
+
+            1) create a hosted network (1time ssh config)
+            2) deploys a eureka server (1time ssh config)
+            3) deploys kafka
+            3) deploy a webserver for uploading JSON project (or delta) (1time ssh config)
+            4) deploy the core (exec operations, deploy to analysis, proxify analysis and worker nodes)
+            4) allow monitoring and updating cluster (v2) (1time ssh config)
+            5) allow modification of hosted network (v2) (1time ssh config)
+
+            => simple example 1 :
+                - analysis01 listen to /kafka/topic/rand-int-01 and keep sum in memory, with an API to retrieve result
+                - worker01(+worker02?) produce a random int every sec and writes to /mqtt/rand-int-01
+                - manager converts MQTT messages to kafka messages and vice versa
+                - manager hosts a webpage (template) with 1 button : getSum and 1 text output (+websocket)
+                    on click, websocket is linked to analysis01 output
+
+            => simple example 2 :
+                - worker01 is connected to a DHT11 and worker02 to a fan and a red LED (only for design, all could be done with worker01)
+                - a python driver parses the temperature to a single int value in celsius
+                - if a specific command is received, toggle specific GPIO
+                (todo : example with another temperature sensor and another driver to show the utility of live code deployment)
+                - worker01 send data via MQTT to manager. Manager sends data via Kafka to analysis01.
+                - analysis01 batch-process 10 by 10 temperature data, removes inconsistent data and calculate the mean.
+                if the mean is > 18, trigger the fan
+                if a prediction model to-be-defined shows temperature will be > 18 in less than 3 batch-process, trigger the red LED
+
+
+
+    </div>
+    <div>
+        <h4>Analysis nodes</h4>
+        <p>Description : subscribes to kafka feed or expose REST api, compute data, render output/trigger operation </p>
+        <div>
+            MyPi3B+[02] - Services [SimpleStream]
+            MyPC - Services [SimpleStream, BigDataStream]
+        </div>
+    </div>
+    <div>
+        <h4>Worker devices</h4>
+        <p>Description :</p>
+        <div>
+
+        </div>
+    </div>
+    <div>
+        <h4>Repository device</h4>
+        <p>Description : contains python drivers, javascript components? and scala operations and expose a simple REST api</p>
+        <div>
+            MyPi3B
+        </div>
+    </div>
+
+</div>
+
+
+
+    Agri01 Tree
+    An automatic system for hydroponics, without internet connection
+    2 sensors and one water pump
+    When an indicator built from the two sensors goes beyond X, the pump is triggered for X seconds, then can't be triggered for  X minutes (until indicator goes down)
+
+
+    Services :
+    Manager service : interpret JSON, redirects data, communicate with user through template webserver
+    Repository service : contains python drivers for reading data and triggering pump
+    Analysis services : pipes data, transform to readable, save to DB, send alert to manager when pump triggering condition is reached
+    Worker nodes (1 node = 1 device) : simple python+GPIO, receives py drivers, exec them on MQTT call
+
+    template + operation + automation => manager
+    IO => worker
+    pipeline => analysis
+
+
+
+
+
+    Agri02
+    Same + camera + image processing
+
+
+
+
+
+<div> <span>Device tree 01</span> - id: <span>dt01</span>
+
+    <div class="subtree lvl0">
+        <span>Manager node :</span> <span>myManagerDomainName</span>
+        <div class="subtree lvl1">
+            <span>Repository node : </span> <span></span>
+        </div>
+        <div class="subtree lvl1">
+            <span>Analysis nodes : </span> <span></span>
+        </div>
+        <div class="subtree lvl1">
+
+        </div>
+    </div>
+
+    <div>Manager node :</div>
+</div>
+
+<div>New device tree</div>
+<div>New device tree</div>
+<div>New device tree</div>
+</div>

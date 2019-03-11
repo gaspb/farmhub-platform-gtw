@@ -1,6 +1,6 @@
-import {Route} from "@angular/router";
+import { Route } from '@angular/router';
 
-import {IotComponent} from "./iot.component";
+import { IotComponent } from './iot.component';
 
 export const IOT_ROUTE: Route = {
     path: 'iot',

@@ -47,7 +47,10 @@ export class JhiTrackerService {
         this.stompClient = Stomp.over(socket);
         const headers = {};
         this.stompClient.connect(headers, () => {
-            this.connectedPromise('success');
+            console.log('eror on', this.connectedPromise);
+            if (this.connectedPromise && typeof this.connectedPromise === 'function') {
+                this.connectedPromise('success');
+            }
             this.connectedPromise = null;
             this.sendActivity();
             if (!this.alreadyConnectedOnce) {
@@ -90,6 +93,7 @@ export class JhiTrackerService {
     subscribe() {
         this.connection.then(() => {
             this.subscriber = this.stompClient.subscribe('/topic/tracker', data => {
+                console.log('RECIEVED TRACKER DATA', data);
                 this.listenerObserver.next(JSON.parse(data.body));
             });
         });

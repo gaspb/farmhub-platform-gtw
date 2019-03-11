@@ -158,7 +158,13 @@ export class PipelineItemFormComponent implements OnInit {
         this.endpointWithTrigger.endpoint = this.endpoint;
         this.endpointWithTrigger.trigger = this.trigger;
         this.formItem.data = this.endpointWithTrigger;
-        this.endpoint.name = 'RANDOM_TODO_' + Math.random();
+        this.endpoint.name = this.endpoint.address
+            ? this.endpoint.address + (this.endpoint.port ? ':' + this.endpoint.port : '')
+            : 'ENDPOINT' +
+              '_' +
+              Math.random()
+                  .toString()
+                  .substring(2, 7);
         this.formItem.name = this.endpoint.name;
         this.completeForm.emit(this.formItem);
         this.formItem.type = null;

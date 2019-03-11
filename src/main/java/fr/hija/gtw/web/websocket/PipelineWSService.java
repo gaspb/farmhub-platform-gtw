@@ -35,7 +35,6 @@ public class PipelineWSService  {
         return pplDTO;
     }
 
-
     public void sendToUser(String message, String user) {
         log.info("in sendToUser ");
         PipelineMessageDTO pplDTO = new PipelineMessageDTO();

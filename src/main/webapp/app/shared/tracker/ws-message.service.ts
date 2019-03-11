@@ -12,10 +12,11 @@ import { LocalStorageService } from 'ngx-webstorage';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Ws1MessageModel } from '../../demos/realtime/ws1.message.model';
 import { Account } from '../../core/user/account.model';
+import { Client } from 'webstomp-client';
 
 @Injectable()
 export class WsMessageService {
-    stompClient = null;
+    stompClient: Client = null;
     subscriber = null;
     connection: Promise<any>;
     connectedPromise: any;
@@ -65,10 +66,15 @@ export class WsMessageService {
 
         console.log('DEBUG1 ', headers);
         this.stompClient.connect(headers, () => {
-            this.connectedPromise('success');
+            console.log(this.connectedPromise);
+            if (this.connectedPromise && typeof this.connectedPromise === 'function') {
+                this.connectedPromise('success');
+            }
+
             console.log('DEBUG2', headers);
             this.connectedPromise = null;
             if (!this.alreadyConnectedOnce) {
+                this.sendPplMessage('started');
                 this.subscription = this.router.events.subscribe(event => {
                     if (event instanceof NavigationEnd) {
                         this.sendPplMessage('ended' + event.login);
@@ -158,9 +164,12 @@ export class WsMessageService {
         });
     }
 
-    unsubscribe() {
+    unsubscribe(subscribePath: string) {
         if (this.subscriber !== null) {
             this.subscriber.unsubscribe();
+        }
+        if (this.stompClient !== null) {
+            this.stompClient.unsubscribe('/topic/' + subscribePath);
         }
         this.listener = this.createListener();
     }

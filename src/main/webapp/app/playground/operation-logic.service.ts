@@ -10,7 +10,7 @@ export class OperationLogicService {
     constructor(private http: HttpClient, private pgSvc: PlaygroundService, private wsMessageService: WsMessageService) {}
 
     unsubscribeAll() {
-        this.wsMessageService.unsubscribe();
+        this.wsMessageService.unsubscribe('scala-ms-receiver');
     }
 
     async execute(opItemType, input, body?) {
@@ -28,7 +28,10 @@ export class OperationLogicService {
                     input = null;
                 }
                 console.log('TODO ---- EXECUTE API', path); // TODO
-
+                //temporary
+                if (path.startsWith('gtw/')) {
+                    path = path.split('gtw/')[1];
+                }
                 //IF GET
 
                 let t;
@@ -50,7 +53,7 @@ export class OperationLogicService {
 
                 break;
             case 'json-input':
-                let obj = JSON.parse(body.content);
+                let obj = JSON.parse(body.content.replace(/(['"])?([a-z0-9A-Z_]+)(['"])?:/g, '"$2": ').replace(/(')/g, '"'));
                 res.body = obj;
 
                 break;
@@ -65,15 +68,31 @@ export class OperationLogicService {
                     console.log('CONNECTED TO WS : ', queue);
                 });
                 console.log('---SENDING RUN TO scalapipeline/api/test/ppl/run/' + body.trigger.outputEndpointURL);
-                this.http.get('scalapipeline/api/test/ppl/run/' + body.trigger.outputEndpointURL);
+                this.http.get('scalapipeline/api/test/proxy/run/' + body.trigger.outputEndpointURL).subscribe(
+                    data => {
+                        console.log('Running ppl ', data);
+                        return true;
+                    },
+                    error => {
+                        console.error('Error running ppl !');
+                        return Observable.throw(error);
+                    }
+                );
 
                 const self = this;
                 setTimeout(function() {
                     self.wsMessageService.subscribe('scala-ms-receiver');
-                    self.wsMessageService.sendPplMessage('init');
+                    // self.wsMessageService.sendPplMessage('init'); //TODO GBO 0512
                 }, 200);
 
-                res.body = this.wsMessageService.receive();
+                res.body = this.wsMessageService.receive().map(m => {
+                    try {
+                        m = JSON.parse(m.body.replace('\\', ''));
+                    } catch (e) {
+                        m = m.body;
+                    }
+                    return m;
+                });
 
                 break;
             case 'converter':
@@ -152,13 +171,10 @@ export class OperationLogicService {
                 tempLinks.push(new LinkModel(lk.target, orig));
             });
         });
-        console.log('TPL 1 : ', tempLinks);
         tempLinks.forEach(
             model =>
                 isNullOrUndefined(links[model.origin]) ? (links[model.origin] = [model.target]) : links[model.origin].push(model.target)
         );
-        console.log('TPL 2 : ', links);
-
         const END_ELEM_ID = 'i-op-0';
 
         if (isNullOrUndefined(links[ORIG_ELEM_ID]) || isNullOrUndefined(links[END_ELEM_ID])) {
@@ -176,31 +192,14 @@ export class OperationLogicService {
         chain = this.buildCallChain(allElements, links, ORIG_ELEM_ID, '5', chain, END_ELEM_ID, elemMinus2);
         console.log(chain);
 
-        /*//TODO V1 : simple sync chain
-        for (const p of chain) {
-            await this.execute(p['itemType'], input, p['elemToExecute']).then(data => { //TODO pipe, so than multiple inputs will trigger following elements each time
-                //TODO + have an observable end-element to associate to the template
-                console.log('result ', data);
-                input = data;
-            });
-        }
-        console.log('--- END : ', input);*/
-        //return input;
-
-        //V1.5 same promise chain but wrapped in an observable
-        //TODO V2 : observable piping
-        //only 1st element of an operation can be an observable, if the input side is not connected
         let i = 0;
-        console.log('========== Preparing 0 ============');
         let next = () => chain[i++];
         let self = this;
         function getNext(inputVal): any {
-            console.log('========== GETNEXT - input: ', inputVal);
             let nx = next();
             return self.execute(nx['itemType'], inputVal, nx['elemToExecute']);
         }
         function getOne(idx, inputVal): any {
-            console.log('========== GET ONE - input, idx ', inputVal);
             let nx = chain[idx];
             return self.execute(nx['itemType'], inputVal, nx['elemToExecute']);
         }
@@ -210,41 +209,33 @@ export class OperationLogicService {
 
         for (let x = 1; x < chain.length; x++) {
             const i = x;
-            console.log('PIPE ', i);
             obs = obs.map(prev => {
-                console.log('IN MAP - ', prev);
                 return getOne(i, prev);
             });
         }
-        console.log('RETURNING OBS', obs);
         //temp1.subscribe(data=>console.log(data))
         return obs;
     }
 
     public asObservable(some): Observable<any> {
         if (some instanceof Observable) {
-            console.log('firstRes is OBS', some);
             return some;
         } else if (some instanceof Promise) {
             let prom: Promise = some;
-            console.log('firstRes is wrapped OBS', some, prom);
             return new Observable<any>(observer => {
                 prom.then(obs => this.flattenObservable(obs, observer));
             });
         } else {
-            console.log('firstRes is NOT OBS', some);
             return Observable.of(some);
         }
     }
     private flattenObservable(some, observer) {
         if (some instanceof Observable) {
-            console.log('Flattening', some);
             some.subscribe(data => {
                 this.flattenObservable(data, observer);
             });
         } else {
             this.asObservable(some).subscribe(data => {
-                console.log('Flattened observer data', data);
                 observer.next(data);
             });
         }
@@ -253,18 +244,14 @@ export class OperationLogicService {
     private buildCallChain(allElements, links, previousElem, input, chain, endElementId, elemMinus2): [{}] {
         const currentElemArr: [string] = links[previousElem];
         const currentElemId = currentElemArr.filter(str => !elemMinus2 || str != elemMinus2)[0];
-        console.log('DEBUG------------- currentElemId arr links', currentElemId, currentElemArr, links);
         let elemToExecute = allElements[currentElemId];
         if (isNullOrUndefined(elemToExecute)) {
-            console.log('returning');
             return chain;
         }
         let response: Promise<any>;
 
         const itemType: string = elemToExecute['OP_ITEM_TYPE'];
         if (itemType != 'holder') {
-            //EXECUTE
-            console.log('EXECUTE---', elemToExecute);
             chain.push({ itemType: itemType, input: input, elemToExecute: elemToExecute });
             // response = this.opLogicService.execute(itemType, this.output, elemToExecute);
         } else {

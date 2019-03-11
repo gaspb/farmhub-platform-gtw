@@ -17,6 +17,8 @@ import { WsMessageService } from './tracker/ws-message.service';
 import { AuthServerProvider } from '../core/auth/auth-jwt.service';
 import { StackService } from './stack/stack.service';
 import { UserService } from '../core/user/user.service';
+import { NotificationService } from './notification/notification.service';
+import { Register } from '../account/register/register.service';
 
 @NgModule({
     imports: [GtwSharedLibsModule, GtwSharedCommonModule],
@@ -34,7 +36,9 @@ import { UserService } from '../core/user/user.service';
         AuthServerProvider,
         StackService,
         UserService,
-        DatePipe
+        DatePipe,
+        NotificationService,
+        Register
     ],
     entryComponents: [JhiLoginModalComponent],
     exports: [GtwSharedCommonModule, JhiLoginModalComponent, HasAnyAuthorityDirective, DatePipe],

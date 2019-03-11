@@ -4,9 +4,9 @@
 
     <groupId>fr.hija.gtw</groupId>
     <artifactId>gtw</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.2.13-ALPHA</version>
     <packaging>war</packaging>
-    <name>Gtw</name>
+    <name>gtw</name>
 
     <repositories>
         <!-- jhipster-needle-maven-repository -->

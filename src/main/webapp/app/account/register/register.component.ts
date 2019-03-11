@@ -2,8 +2,8 @@ import { AfterViewInit, Component, ElementRef, OnInit, Renderer } from '@angular
 import { HttpErrorResponse } from '@angular/common/http';
 import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 
-import { EMAIL_ALREADY_USED_TYPE, LOGIN_ALREADY_USED_TYPE } from 'app/shared';
-import { LoginModalService } from 'app/core';
+import { EMAIL_ALREADY_USED_TYPE, LOGIN_ALREADY_USED_TYPE } from '../../shared';
+import { LoginModalService } from '../../core';
 import { Register } from './register.service';
 
 @Component({

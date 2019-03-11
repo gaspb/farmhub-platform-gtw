@@ -8,6 +8,10 @@ import { VERSION } from '../../app.constants';
 import { LoginService } from '../../core/login/login.service';
 import { Principal } from '../../core/auth/principal.service';
 import { LoginModalService } from '../../core/login/login-modal.service';
+import { NotificationService } from '../../shared/notification/notification.service';
+import { NotificationDTO } from '../../shared/notification/notification.model';
+import { DashboardService } from '../../dashboard/dashboard.service';
+import { Account } from '../../core/user/account.model';
 
 @Component({
     selector: 'jhi-navbar',
@@ -21,14 +25,17 @@ export class NavbarComponent implements OnInit {
     swaggerEnabled: boolean;
     modalRef: NgbModalRef;
     version: string;
+    userNotifications: { notif; route }[] = [];
 
     constructor(
         private loginService: LoginService,
         private principal: Principal,
         private loginModalService: LoginModalService,
         private profileService: ProfileService,
-        private router: Router
+        private router: Router,
+        private notificationService: NotificationService
     ) {
+        this.userNotifications = [];
         this.version = VERSION ? 'v' + VERSION : '';
         this.isNavbarCollapsed = true;
     }
@@ -38,6 +45,27 @@ export class NavbarComponent implements OnInit {
             this.inProduction = profileInfo.inProduction;
             this.swaggerEnabled = profileInfo.swaggerEnabled;
         });
+        this.notificationService.userEventEmitter.subscribe(notifs => {
+            console.log('Received notifications from notificationService : ', notifs);
+            if (notifs) {
+                notifs.forEach(notif => {
+                    switch (notif.name) {
+                        case 'invite_team':
+                            console.log('');
+                            this.userNotifications.push({
+                                notif: notif,
+                                route: 'dashboard'
+                            });
+                    }
+
+                    return notif;
+                });
+            }
+        });
+    }
+
+    debugNotifServ() {
+        this.notificationService.pushNotificationToSelf(new NotificationDTO('admin', 'admin', 'usr', 'upd', 'someval', '', 'sometext'));
     }
 
     collapseNavbar() {

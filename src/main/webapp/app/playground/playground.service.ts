@@ -34,14 +34,17 @@ export class PlaygroundService {
     getPipelineList() {
         return PlaygroundService.tempPipelines;
     }
-    savePipeline(ppl: PipelineVM) {
-        PlaygroundService.tempPipelines.push(ppl);
-        console.log('SAVING PPL ', ppl);
 
+    pushPipeline(ppl: PipelineVM) {
+        console.log('PUSHING PPL ', ppl);
         const headers = new HttpHeaders();
         headers.append('Accept', 'application/json');
         headers.append('Content-Type', 'application/json');
-        return this.http.post('scalapipeline/api/test/ppl/', JSON.stringify(ppl), httpOptions); //TODO
+        return this.http.post('scalapipeline/api/test/ppl', '{"base64":"' + btoa(JSON.stringify(ppl)) + '"}', httpOptions); //TODO
+    }
+    savePipeline(ppl: PipelineVM) {
+        PlaygroundService.tempPipelines.push(ppl);
+        console.log('SAVING PPL ', ppl);
     }
     stopAndCancelPipeline(ppl: PipelineVM) {
         PlaygroundService.tempPipelines = PlaygroundService.tempPipelines.filter(s => s != ppl);
@@ -159,7 +162,24 @@ export class PlaygroundService {
             }
         ];
     }
-
+    mockTemplateOutputs = this.mockOutputs(['tp-text-out', 'Text'], ['tp-log-out', 'Log'], ['tp-graph-out', 'Graph']);
+    mockOutputs(...args) {
+        let arr = [];
+        args.forEach(s =>
+            arr.push({
+                id: s[0],
+                name: s[1]
+            })
+        );
+        return arr;
+    }
+    getMockTemplateOutputs() {
+        return this.mockOutputs(['tp-text-out', 'Text'], ['tp-log-out', 'Log'], ['tp-graph-out', 'Graph']);
+    }
+    addMockTemplateOutput(mockTemplateOutput) {
+        mockTemplateOutput['title'] = mockTemplateOutput['name'];
+        this.mockTemplateOutputs.push(mockTemplateOutput);
+    }
     mapSwaggetToMsDTO(swaggerApis) {
         return swaggerApis.map(api => {
             let routes: ApiDoc[] = [];
@@ -169,7 +189,6 @@ export class PlaygroundService {
                 const routeContent = api.paths[routeName];
                 const activeTypes: string[] = Object.keys(routeContent).filter(key => !isNullOrUndefined(routeContent[key]));
                 activeTypes.forEach(type => {
-                    console.log('MAPSWAGGERTODTOP==>MAPpING API - responses for type', routeContent[type], routeContent[type].responses);
                     routes.push(
                         new ApiDoc(
                             routeName.substring(1),

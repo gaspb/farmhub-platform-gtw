@@ -5,6 +5,10 @@
         <span class="pg-menu" (click)="operationView=true;currView='op'" [ngClass]="{ 'pg-menu-selected': currView=='op'}">Operation view</span>
         <span class="pg-menu" (click)="operationView=false;currView='dp'" [ngClass]="{ 'pg-menu-selected': currView=='dp'}">Pipeline view</span>
         <span class="pg-menu" (click)="operationView=false;currView='au'" [ngClass]="{ 'pg-menu-selected': currView=='au'}">Automation view</span>
+        <span class="pg-menu" (click)="operationView=false;currView='dyn'" [ngClass]="{ 'pg-menu-selected': currView=='dyn'}">Dynamics view</span>
+
+        <span class="pg-menu" style="float: right;color: #ffffffba;" routerLink="../dashboard">{{(current && current.project) ? current.projectDisplayName : "No active project"}}</span>
+
 
     </div>
     <div class="pg-container" >
@@ -163,12 +167,13 @@
             <ul class="op-menu-entry op-draggable" data-item="0">
                 <span (click)="isToggledOpMenu = isToggledOpMenu=='tp-out' ?  'false': 'tp-out'">Outputs</span>
 
-                <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom" data-item="1">New Output Type (?)</li>
-                <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom op-draggable" data-item="2" (dragstart)="dragStart('tp-text-out', null)">textarea</li>
-                <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom op-draggable" data-item="2" (dragstart)="dragStart('tp-log-out', null)">log</li>
-                <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom" data-item="3" >JSON</li>
-                <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom" data-item="3">Stream</li>
+                <li [hidden]="isToggledOpMenu!='tp-out'" (click)="doOpenModal('output')" data-item="1">Custom output</li>
+                <li [hidden]="isToggledOpMenu!='tp-out'"  draggable="true" class="dragfrom op-draggable" *ngFor="let out of outputs" (dragstart)="dragStart(out.id, null)" >
+                    {{out.name}}
+                </li>
                 <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom" data-item="3">Datatable</li>
+                <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom" data-item="3" >JSON</li>
+                <li [hidden]="isToggledOpMenu!='tp-out'" draggable="true" class="dragfrom" data-item="3">Media Stream</li>
 
             </ul>
             <ul class="op-menu-entry op-draggable" data-item="0">
@@ -179,5 +184,13 @@
 
             </ul>
         </div>
+    </div>
+</div>
+<div class="pg-form-container" [hidden]="!openCustomModal">
+    <div class="pl-form">
+        <div class="form-close" (click)="customModalContent='';openCustomModal=false">X</div>
+        <div style=" font-size:smaller"  id="customModalContent">
+        </div>
+
     </div>
 </div>

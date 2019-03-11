@@ -1,168 +1,375 @@
+<span class="lead"><fa-icon [icon]="'bars'" (click)="dsbMenuOpen = !dsbMenuOpen" class="pointer transition-1s" [ngClass]="{'rotate--90' : dsbMenuOpen}"></fa-icon> <span> DASHBOARD</span></span>
+<div class="dsb-host">
 
-<div class="dashboard-container">
-    <h3>Dashboard</h3>
-    <div  class="dsb-desc">
-        <span>View usage and manage rate limiting and prices</span>
-  </div>
+<div *ngIf="activeProject" class="dsb-menu" [ngClass]="{'dsb-menu-close' : !dsbMenuOpen}">
 
-    <div class="dsb-content">
-        <div  class="dsb-grid">
-            <div>  <h3>Available Microservices</h3></div>
-            <div class="dsb-grid-child " dsbGrid>
-                <div>Your selected microservices</div>
-                <div class="dsb-grid-content"><div class="dsb-add">Add</div></div>
+    <ul>
+        <div class="op-help-submenu"><span>Help</span><span>API</span><span (click)="about = !about">About</span></div>
+        <li class="dsb-menu-entry " (click)="setActiveDsbMenu($event.srcElement, 'proj')">
+            <span>Projects</span>
+            <ul>
+                <li class="active"><input id="project-radio" class="pointer" type="radio" checked/><label for="project-radio"> {{activeProject.name}}</label></li>
+            </ul>
+        </li>
+        <li class="dsb-menu-entry pointer" (click)="setActiveDsbMenu($event.srcElement, 'team')">
+            <span>Teams</span>
+            <ul>
+                <li *ngIf="!activeTeam" class="dsb-empty">no team joined</li>
+                <li *ngIf="activeTeam!=null" class="active"><input id="team-radio" class="pointer" type="radio" checked/>{{activeTeam.name}}</li>
+            </ul>
+        </li>
+        <li class="dsb-menu-entry pointer" (click)="setActiveDsbMenu($event.srcElement, 'pgviews')">
+            Playground views
+        </li>
+        <li class="dsb-menu-entry pointer" (click)="setActiveDsbMenu($event.srcElement, 'embedded-repo')">
+            Embedded repository
+        </li>
+        <li class="dsb-menu-entry pointer" (click)="setActiveDsbMenu($event.srcElement, 'networks')">
+            Networks
+        </li>
+        <li class="dsb-menu-entry pointer" (click)="setActiveDsbMenu($event.srcElement, 'hosts')">
+            DNS
+        </li>
+        <li class="dsb-menu-entry pointer" (click)="setActiveDsbMenu($event.srcElement, 'device')">
+            Devices
+        </li>
+        <li class="dsb-menu-entry pointer" (click)="setActiveDsbMenu($event.srcElement, 'iot')">
+            Sensors
+        </li>
+        <li class="dsb-menu-entry pointer" (click)="setActiveDsbMenu($event.srcElement, 'extserv')">
+            External services
+        </li>
+        <li class="dsb-menu-entry pointer" (click)="setActiveDsbMenu($event.srcElement, 'ratesecurity')">
+            Rate-limiting and security
+        </li>
+        <li class="dsb-menu-entry pointer" (click)="setActiveDsbMenu($event.srcElement, 'failure')">
+            Failure management
+        </li>
+        <li class="dsb-menu-entry pointer" (click)="setActiveDsbMenu($event.srcElement, 'cdci')">
+            CI pipeline
+        </li>
+        <li class="dsb-menu-entry pointer" (click)="setActiveDsbMenu($event.srcElement, 'scale')">
+            Scaling
+        </li>
+        <li class="dsb-menu-entry pointer" (click)="setActiveDsbMenu($event.srcElement, 'ads')">
+            Advertisement and billing
+        </li>
+    </ul>
+
+
+</div>
+<div class="dashboard-container" *ngIf="init">
+    <div *ngIf="about" class="dsb-no-proj-desc">
+        ABOUT<br/><br/>
+        Build projects from idea to production<br/>
+        Find community-made components or share your own<br/>
+        Customize your Playground views<br/>
+        Connect, manage and monitor your hosting machines<br/>
+        Configure rate-limiting, security, scaling, CI and eventual advertisement and billing options<br/>
+        Create and deploy IoT or SaaS production-ready applications from your projects<br/>
+    </div>
+
+    <div *ngIf="!activeProject" class="dsb-no-proj" style="position:relative">
+
+        <span>You do not have any opened project</span>
+
+        <div>Saved projects :
+            <span *ngIf="!current || !current.projects || current.projects.length==0" style="font-weight:normal">
+                no content
+            </span>
+            <div *ngIf="current && current.projects && current.projects.length>0" class="dsb-projects-cont">
+                <ul *ngFor="let project of current.projects" (click)="openProject(project.projectId)" class="dsb-invite">
+                    <li ><span class="dsb-invite-content">Project {{project.projectDisplayName}}</span> <span class="dsb-inv-actions">open</span></li>
+                </ul>
             </div>
-            <div class="dsb-grid-child " dsbGrid>
-                <div>Declared Microservices</div>
-                <div class="dsb-grid-content" (click)="$event.preventDefault();$event.stopPropagation()">
-                    <button class="dsb-add" [hidden]="this.formToggled === 'declare-ms'" (click)="toggleMsForm('declare-ms')">Declare a new MS</button>
-                    <div class="dasb-declare-ms-form" [hidden]="this.formToggled != 'declare-ms'">
-                                <!-- JSON FORM TEMPLATE -->
-                              <pre class="json dsb-json" spellcheck="false"><code>{{'
-                      {
-                        <span class="hljs-attr">public displayed base path</span>: <input class="hjl-dsb-string" value="/myMs/**">,
-                        <span class="hljs-attr">secured base path</span>: <input class="hjl-dsb-string" value="/ms/**">,
-                        <span class="hljs-attr">serviceId</span>: <input class="hjl-dsb-string" value="ms">,
-                        <span class="hljs-attr">serviceInstances</span>: [
-                          {
-                            <span class="hljs-attr">host</span>: <input class="hjl-dsb-string" value="192.168.0.95">,
-                            <span class="hljs-attr">port</span>: <input class="hjl-dsb-number" value="9999">,
-                            <span class="hljs-attr">uri</span>: <input class="hjl-dsb-string" value="http://host:port/">,
-                            <span class="hljs-attr">instanceInfo</span>: {
-                                  <span class="hljs-attr">instanceId</span>: <input class="hjl-dsb-string" value="ms:019b504251054c5e1fb0052399e2d79a">,
-                                  <span class="hljs-attr">app</span>: <input class="hjl-dsb-string" value="MS1">,
-                                  <span class="hljs-attr">appGroupName</span>: <input class="hjl-dsb-string" value="null">,
-                                  <span class="hljs-attr">homePageUrl</span>: <input class="hjl-dsb-string" value="http://host:port/">,
-                                  <span class="hljs-attr">statusPageUrl</span>: <input class="hjl-dsb-string" value="http://host:port/management/info">,
-                                  <span class="hljs-attr">healthCheckUrl</span>: <input class="hjl-dsb-string" value="http://host:port/management/health">,
-                                  <span class="hljs-attr">countryId</span>: <input class="hjl-dsb-number" value="1">,
-                                  <span class="hljs-attr">dataCenterInfo</span>: {
-                                     <span class="hljs-attr">provider</span>: <input class="hjl-dsb-literal" value="GKE">
-                              },
+        </div>
 
-                            },
-                            <span class="hljs-attr">secure</span>: <input class="hjl-dsb-literal" value="false">,
-                            <span class="hljs-attr">private</span>: <input class="hjl-dsb-literal" value="false">,
-                          }, + ADD NEW +
-                        ],
-                        <span class="hljs-attr">exposedApis</span>: [
-                          {
-                              <span class="hljs-attr">displayed path</span>: <input class="hjl-dsb-string" value="/myAPI/findAll">,
-                              <span class="hljs-attr">secure path</span>: <input class="hjl-dsb-string" value="/some/real/path">,
-                              <span class="hljs-attr">REST type</span>: <input class="hjl-dsb-string" value="GET">,
-                              <span class="hljs-attr">description</span>: <input class="hjl-dsb-string" value="Find them all !">,
-                              <span class="hljs-attr">input</span>: <input class="hjl-dsb-string" value="string">,
-                              <span class="hljs-attr">input description</span>: <input class="hjl-dsb-string" value="any word">,
-                              <span class="hljs-attr">output</span>: <input class="hjl-dsb-string" value="string">,
-                              <span class="hljs-attr">output description</span>: <input class="hjl-dsb-string" value="formatted ISO-2947">,
+        <div class="dsb-proj-menu-opt pointer" (click)="startNewProject()">
+            Start a project
+        </div>
 
-                           }, + ADD NEW +
-                         ],
+        <div class="dsb-proj-menu-opt">
+            Join a team
+        </div>
 
-                      }
-                    '}}</code></pre>
-                        <button class="dsb-add" (click)="toggleMsForm('');">Save and add !</button>
-                        <button class="dsb-add" (click)="toggleMsForm('');">Close</button>
+        <div class="dsb-proj-menu-opt">
+            Tutorial
+        </div>
+
+        <div class="dsb-proj-menu-opt pointer" (click)="startNewProject()" >
+            Invites :
+            <span *ngIf="invites.length==0" style="font-weight:normal">
+                no content
+            </span>
+            <div *ngIf="invites.length>0" class="dsb-invites-cont">
+                <ul *ngFor="let notif of invites" (click)="joinTeam(notif.meta.id)" class="dsb-invite">
+                    <li><span class="dsb-invite-content">User {{notif.fromUser}} invited you to team {{notif.value}}</span> <span class="dsb-inv-actions">x</span><span class="dsb-inv-actions">join</span></li>
+                </ul>
+            </div>
+
+s
+
+
+        </div>
+
+    </div>
+    <div *ngIf="activeProject" class="dsb-proj">
+
+        <div [ngSwitch]="activeDsbMenu">
+            <div *ngSwitchDefault>
+                <div style="position: relative">
+                    <h3  style="width: fit-content;" contenteditable="true" spellcheck="false" (input)="updateProjectName($event.srcElement.textContent.trim())">{{baseProjectName}}</h3>
+                    <span><button class="dsb-add" style="position: absolute;top: 0;right: 10%;" (click)="close()">Close project</button></span>
+                </div>
+
+                <div class="dsb-proj-ct">
+                    Teams : [ ] <br>
+                    <div *ngIf="activeTeam!=null" (click)="activeDsbMenu = 'team'">
+                        Active team : {{activeTeam.name}}
+
+                    </div>
+                    <div *ngIf="!activeTeam"><div (click)="startNewTeam()">Create a team</div><br></div>
+
+                </div>
+                <div class="dsb-proj-ct">
+                  Activity : <br>
+                    no recent activity<br>
+                </div>
+                <div class="dsb-proj-ct">
+                    Profile : dev<br>
+                </div>
+                <div class="dsb-proj-ct">
+                    Deployed networks : [ ]<br>
+                </div>
+                <div class="dsb-proj-ct">
+                    Hosts : [ ]<br>
+                </div>
+                <div class="dsb-proj-ct">
+                    SaaS : [ ]<br>
+                </div>
+                <div class="dsb-proj-ct">
+                    Wallet : not initiated<br>
+                </div>
+            </div>
+            <div *ngSwitchCase="'device'">
+                <hjl-device></hjl-device>
+            </div>
+            <div *ngSwitchCase="'iot'">
+                <hjl-iot></hjl-iot>
+            </div>
+            <div *ngSwitchCase="'pgviews'">
+                <h3 >Playground views</h3>
+
+                <div class="dsb-pgviews-menu">
+                    <div (click)="setActiveGeneric($event.srcElement, 'pgviews', 'tp')">Template</div>
+                    <div (click)="setActiveGeneric($event.srcElement, 'pgviews', 'op')">Operation</div>
+                    <div (click)="setActiveGeneric($event.srcElement, 'pgviews', 'pl')">Pipeline</div>
+                </div>
+
+                <div class="pg-views-content" [ngSwitch]="activeHolder['pgviews']">
+                    <div *ngSwitchCase="'tp'">
+                        <div>Template</div>
+
+                        <div>
+                            {{templateDsbContentMessage}}
+                            <table class="dsb-table" style="width: 100%">
+                                <thead>
+                                    <th>Current</th>
+                                    <th>Project</th>
+                                    <th>Team</th>
+                                    <th>MyNexus</th>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <ul style="list-style:none; padding-left:0">
+                                                <li>
+                                                    <div><b>Base</b></div>
+                                                    <ul style="list-style:none; padding-left:0">
+                                                        <li>All base components</li>
+                                                    </ul>
+                                                    <div><b>Custom</b></div>
+
+                                                    <ul style="list-style:none; padding-left:0">
+                                                        <li *ngFor="let component of current.components.templateComponents"  (click)="addTemplateComponent(component)"> {{component.name}} </li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            <ul style="list-style:none; padding-left:0">
+                                                <li *ngFor="let component of activeProject.templateComponents"  (click)="addTemplateComponent(component)"> {{component.name}} </li>
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            <ul style="list-style:none; padding-left:0">
+                                                <li *ngFor="let component of activeTeam.templateComponents"  (click)="addTemplateComponent(component)"> {{component.name}} </li>
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            <ul style="list-style:none; padding-left:0">
+                                                <li>
+                                                    <div><b>Base</b></div>
+                                                    <ul style="list-style:none; padding-left:0">
+                                                        <li *ngFor="let comp of nexusTemplateComponents" (click)="addTemplateComponent(comp)">{{comp.name}} </li>
+                                                    </ul>
+                                                    <div><b>Custom</b></div>
+                                                    <ul style="list-style:none; padding-left:0">
+
+                                                    </ul>
+                                                    <div><b>Community</b></div>
+                                                    <ul style="list-style:none; padding-left:0">
+
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><button class="dsb-add" (click)="addTemplateComponentToCurrent()">+</button><button class="dsb-add">-</button></td>
+                                        <td><button class="dsb-add" (click)="addTemplateComponentToProject()">+</button><button class="dsb-add">-</button></td>
+                                        <td><button class="dsb-add" (click)="addTemplateComponentToTeam()">+</button><button class="dsb-add">-</button></td>
+                                        <td><button class="dsb-add" (click)="addTemplateComponentToNexus()">+</button><button class="dsb-add">-</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                        </div>
+
+                    </div>
+                    <div *ngSwitchCase="'op'">
+                        <div>Operation</div>
+
+                    </div>
+                    <div *ngSwitchCase="'pl'">
+                        <div>Pipeline</div>
+
+                    </div>
+
+                </div>
+
+            </div>
+            <div *ngSwitchCase="'team'">
+                <div *ngIf="!activeTeam">
+                    no team joined
+                    <div (click)="startNewTeam()">Create a team</div><br>
+                </div>
+                <div *ngIf="activeTeam">
+
+                    <h3 style="width: fit-content;">Team <span contenteditable="true" spellcheck="false" (input)="updateTeamName($event.srcElement.textContent.trim())">{{baseTeamName}}</span></h3>
+
+
+                    <div>
+                        Role : {{teamRole}}
                     </div>
 
 
 
+                    <div class="dsb-team-menu">
+                        <div class="pointer" (click)="setActiveGeneric($event.srcElement, 'teamdsb', 'groups')">Groups</div>
+                        <div class="pointer" (click)="setActiveGeneric($event.srcElement, 'teamdsb', 'requests')">Requests</div>
+                        <div class="pointer" (click)="setActiveGeneric($event.srcElement, 'teamdsb', 'chat')">Chat</div>
+                    </div>
 
-
-
-
-
-
-                    <div class="dsb-ms-list"></div>
-                </div>
-
-            </div>
-            <div class="dsb-grid-child " dsbGrid>
-                <div>Registered Microservices</div>
-                <div class="dsb-grid-content"><div class="dsb-info">How to register</div></div>
-            </div>
-            <div class="dsb-grid-child " dsbGrid>
-                <div>Repository Microservices</div>
-                <div class="dsb-grid-content"><div class="dsb-add">Go to Repository</div></div>
-
-        </div>
-            <div class="dsb-grid-child " dsbGrid>
-                <div>Public APIs</div>
-
-                <div class="dsb-grid-content" (click)="$event.stopPropagation()">
-                    <button class="dsb-add" [hidden]="this.formToggled === 'declare-public-api'" (click)="toggleMsForm('declare-public-api')">Declare a new API</button>
-
-                    <form [formGroup]="publicApiForm" novalidate (ngSubmit)="saveApiForm(publicApiForm)" class="dsb-declare-api-form" [hidden]="this.formToggled != 'declare-public-api'">
-
-                        <div class="dsb-api-param"><span>API name : </span><input name="name" value="" formControlName="name"></div>
-                        <div class="dsb-api-param"><span>description : </span><input name="desc" value=""></div>
-                        <div class="dsb-api-param"><span>base URL : </span><input name="url" value=""></div>
-                        <div class="dsb-api-param"><span>REST type : </span><input name="rest" value=""></div>
-
-                        <div><span class="dsb-api-title">Input:</span>
-                            <div class="dsb-api-param"><span>type : </span><input name="inputType" value=""></div>
-                            <div class="dsb-api-param"><span>description : </span><input name="inputDesc" value=""></div>
+                    <div class="dsb-team-content" [ngSwitch]="activeHolder['teamdsb']">
+                        <div *ngSwitchCase="'groups'">
+                            Groups:
+                            <div>
+                                <div class="dsb-team-group" *ngFor="let group of activeTeam.groups">
+                                    <div  class="dsb-team-group-name" ><b>- {{group.name}} -</b>  <span class="dsb-team-remove">x</span></div>
+                                    <div *ngFor="let user of group.users"  class="dsb-team-user">
+                                        <div><span>{{user}}</span>  <span (click)="removeUserFromTeamGroup(group, user)" class="dsb-team-remove pointer">x</span></div>
+                                    </div>
+                                    <button class="dsb-add" (click)="addUserToTeamGroup(group)">Add user</button>
+                                </div>
+                                <button class="dsb-add" (click)="addTeamGroup()">Add group</button>
+                            </div>
                         </div>
+                        <div *ngSwitchCase="'requests'">
 
-                        <div><span class="dsb-api-title">Output:</span>
-                            <div class="dsb-api-param"><span>type : </span><input value=""></div>
-                            <div class="dsb-api-param"><span>description : </span><input value=""></div>
+
+                            <div style="margin:5px 0 10px">
+                                <div>Associate tracking software  :</div>
+
+                                <div> <span class="dsb-link">Jira</span>  <span class="dsb-link">Trello</span>  <span class="dsb-link">Github</span></div>
+                            </div>
+
+                            <div>Requests :</div>
+
+                            <div>
+                                <ul style="padding-right: 40px;">
+                                    <li  class="dsb-team-li-0" *ngFor="let req of teamRequests" title="{{req.dod}}">
+                                        <div class="dsb-team-req-cont1">
+                                            <div class="dsb-team-req-group">#{{req.toGroup}}</div><div class="dsb-team-req-priority p{{req.priority}}"></div>
+                                        </div>
+                                        <span class="dsb-team-req-title">{{req.fromUser}}:</span> {{req.name}} <span class="ws1-date">at {{req.time}}</span> <span *ngIf="!req.handledBy" class="dsb-req-handle" (click)="handleReq(req)">handle</span><span *ngIf="req.handledBy" class="dsb-req-handle">handled by {{req.handledBy}}</span></li>
+                                </ul>
+                            </div>
+                            <button class="dsb-add" (click)="form.notif = {}">New request</button>
+                            <div *ngIf="form.notif">
+                                <div>
+                                    Destination group :
+                                    <select title="group to notify" (change)="form.notif.group=$event.srcElement.value">
+                                        <option selected disabled></option>
+                                        <option *ngFor="let group of activeTeam.groups">{{group.name}}</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    Title :
+                                    <input type="text" value=""  (input)="form.notif.name=$event.srcElement.value">
+                                </div>
+                                <div>
+                                    Scope :
+                                    <select title="scope" (change)="form.notif.view=$event.srcElement.value">
+                                        <option selected disabled></option>
+                                        <option>template</option>
+                                        <option>operation</option>
+                                        <option>pipeline</option>
+                                        <option>project</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    Priority :
+                                    <select title="priority" (change)="form.notif.priority=$event.srcElement.value">
+                                        <option selected disabled></option>
+                                        <option value="2">high</option>
+                                        <option value="1">medium</option>
+                                        <option value="0">low</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    Content :
+                                    <textarea type="text" (input)="form.notif.text=$event.srcElement.value"></textarea>
+                                </div>
+
+
+                                <button class="dsb-add" (click)="sendTeamRequest()">Send</button>
+                            </div>
                         </div>
+                        <div *ngSwitchCase="'chat'">
+                            <div>
+                                Chat:
+                                <div style="position: relative;min-height: 400px;margin-top: 20px;">
+                                    <div #wscont class="commonscroll" style="max-height: 60%;overflow: auto;padding-right: 10px;"  #scrollMe [scrollTop]="scrollMe.scrollHeight">
+                                        <div class="cont-message" *ngFor="let activity of activities" [ngClass]="activity.role">
+                                            <div class="ws1-user">{{activity.login}} :  <span class="ws1-date">{{activity.time | date:'yyyy-MM-dd HH:mm:ss'}}</span></div>
+                                            <span class="ws1-body" style="margin-left:5px">{{activity.body}}</span>
+                                        </div>
+                                        <textarea class="inputws1" #box (keyup.enter)="onEnteredMessage(box.value); box.value=''"></textarea>
+                                    </div>
 
-                        <div><span class="dsb-api-title">Parameters :</span>
-                            <div class="dsb-api-param"><button (click)="addApiParam()">Add a parameter</button></div>
-                            <div formArrayName="_params">
-                            <div *ngFor="let param of publicApiForm.controls._params.controls; let i=index; " class="dsb-api-param-cont">
-                                <span (click)="removeApiParam(i)" class="dsb-remove-param">
-                                       x
-                                </span>
-                                <div [formGroupName]="i">
-
-                                <div class="dsb-api-param"><span>Name : </span><input formControlName="name" value=""></div>
-                                <div class="dsb-api-param"><span>Default value : </span><input formControlName="_default" value=""></div>
-                                <div class="dsb-api-param"><span>Mandatory : </span><input formControlName="_mandatory" type="checkbox" value="true" checked="checked"></div>
-                                <div class="dsb-api-param"><span>Editable : </span><input formControlName="_editable" type="checkbox" value="true" checked="checked"></div>
-                                <div class="dsb-api-param"><span>Description : </span><input formControlName="desc" value=""></div>
                                 </div>
                             </div>
-                            </div>
                         </div>
-                        <button class="dsb-add" (click)="toggleMsForm('')">Save and add !</button>
-                        <button class="dsb-add" (click)="toggleMsForm('')">Cancel</button>
-                    </form>
+                    </div>
+
                 </div>
             </div>
-    </div>
-        <div  class="dsb-grid" >
-            <div>   <h3>Available Operations</h3></div>
-            <div class="dsb-grid-child " dsbGrid>
-                <div>Your selected operations</div>
-
-            </div>
-            <div class="dsb-grid-child " dsbGrid>
-                <div>Saved operations</div>
-
-            </div>
-            <div class="dsb-grid-child " dsbGrid>
-                <div>Repository operations</div>
-
-            </div>
-
         </div>
-        <div  class="dsb-grid">
-            <div>   <h3>Projects</h3></div>
-            <div class="dsb-grid-child " dsbGrid>
-                <div>Your projects</div>
-
-            </div>
-            <div class="dsb-grid-child " dsbGrid>
-                <div>Saved templates</div>
-
-            </div>
-        </div>
-
-
     </div>
+
+
 
 </div>
 
+</div>

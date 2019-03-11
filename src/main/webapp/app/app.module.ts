@@ -25,11 +25,11 @@ import { GtwDocumentationModule } from './documentation/documentation.module';
 import { PlaygroundModule } from './playground/playground.module';
 import { MSTemplateModule } from './framework/mstemplate.module';
 import { GtwWs1Module } from './demos/realtime/ws1.module';
-import { GtwIotModule } from './iot/iot.module';
 import { UserRouteAccessService } from './core/auth/user-route-access-service';
 import { GtwAboutTheLabModule } from './aboutthelab/aboutthelab.module';
 import { GtwGetStartedModule } from './getstarted/getstarted.module';
 import { ParticlesModule } from 'angular-particle';
+import { GtwAdminModule } from './admin/admin.module';
 
 @NgModule({
     imports: [
@@ -41,8 +41,8 @@ import { ParticlesModule } from 'angular-particle';
         GtwHomeModule,
         GtwAccountModule,
         GtwEntityModule,
+        GtwAdminModule,
         GtwEntityModule,
-        GtwIotModule,
         GtwWs1Module,
         MSTemplateModule,
         PlaygroundModule,

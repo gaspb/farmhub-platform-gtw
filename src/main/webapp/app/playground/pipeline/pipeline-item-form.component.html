@@ -5,7 +5,7 @@
             <div *ngSwitchCase="'endpoint'" style="height:100%">
 
                     <form style="height:100%">
-                        <div *ngIf="!formItem.type">
+                        <div>
                             <label for="pl-endpoint-form-type" >Endpoint type</label>
                             <select id="pl-endpoint-form-type" (change)="formItem.type=$event.srcElement.value; get(formItem.type);">
                                 <option value="" disabled selected></option>
@@ -13,7 +13,7 @@
                                 <option value="tcp-stream">TCP Stream</option>
                                 <option data-todo-value="rest-stream" value="AKKA_HTTP_BYTESTRING_READ">REST Stream</option>
                                 <option value="rest-poll">REST Long Polling</option>
-                                <option value="kafka">Kafka</option>
+                                <option value="KAFKA_SUBSCRIBE">Kafka</option>
                                 <option value="db">Database</option>
                             </select>
 
@@ -77,8 +77,8 @@
                                 <select id="pl-endpoint-form-trigger" (change)="trigger.ttype=$event.srcElement.value;">
                                     <option value="" disabled selected></option>
                                     <option value="SIMPLE_RUN" >Manual</option>
-                                    <option value="ENDPOINT" >Endpoint call</option>
-                                    <option value="EVENT" >Pipeline event</option>
+                                    <option value="FROM_REST_ENDPOINT" >Endpoint call</option>
+                                    <option value="FROM_REST_ENDPOINT" >Pipeline event</option>
                                 </select>
                             </div>
                             <button class="dsb-add"  (click)="emitEndpointWtTrigger()">Add</button>
@@ -141,7 +141,7 @@
 											<option value="NUM">Numerical value</option>
                                             <option value="JSON">JSON</option>
                                         </select>
-										
+
                                     </div>
 
 
@@ -228,10 +228,10 @@
 
                 <select (change)="selectOut($event.srcElement.value)">
                     <option></option>
-                    <option>Blob</option>
+                    <option value="DIRECT_BLOB">Blob</option>
                     <option value="TO_DOWNLOADABLE_FILE">File</option>
                     <option>TCP Stream</option>
-                    <option>Websocket</option>
+                    <option value="WEBSOCKET">Kafka+Websocket</option>
                     <option>Kafka</option>
                 </select>
 

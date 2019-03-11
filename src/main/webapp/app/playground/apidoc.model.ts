@@ -31,7 +31,6 @@ export class ApiDoc {
         const type = obj.type
             ? obj.type.toLowerCase()
             : obj.constructor.name == 'Array' ? 'ext-array' : obj.constructor.name == 'Object' ? 'ext-object' : 'default';
-        console.log('TYPE--' + type + '--ITERATING ON ', obj);
         let ret = {};
         switch (type) {
             case 'string':
@@ -41,7 +40,9 @@ export class ApiDoc {
                 obj = [this.buildInputJSONMinimalType_iterate(obj.items)];
                 return obj;
             case 'object':
-                Object.keys(obj.properties).forEach(key => (ret[key] = this.buildInputJSONMinimalType_iterate(obj[key])));
+                if (obj.properties) {
+                    Object.keys(obj.properties).forEach(key => (ret[key] = this.buildInputJSONMinimalType_iterate(obj[key])));
+                }
                 return ret;
             case 'ext-object':
                 Object.keys(obj).forEach(key => (ret[key] = this.buildInputJSONMinimalType_iterate(obj[key])));

@@ -125,6 +125,7 @@ export class UserMgmtComponent implements OnInit, OnDestroy {
     }
 
     private onError(error) {
+        console.log('error', error);
         this.alertService.error(error.error, error.message, null);
     }
 }
